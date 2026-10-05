@@ -3,6 +3,7 @@ import os
 import re
 import sqlite3
 from datetime import datetime, time, timezone
+from zoneinfo import ZoneInfo
 
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
@@ -11,6 +12,7 @@ TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 DB_PATH = os.environ.get("DB_PATH", "leetcode30.db")
 REMINDER_HOUR = int(os.environ.get("REMINDER_HOUR", "19"))
 REMINDER_MINUTE = int(os.environ.get("REMINDER_MINUTE", "0"))
+TIMEZONE = ZoneInfo(os.environ.get("TIMEZONE", "Europe/Budapest"))
 START_DATE = datetime.fromisoformat(os.environ.get("CHALLENGE_START_DATE", datetime.now(timezone.utc).date().isoformat())).date()
 
 CHALLENGES = [
@@ -93,7 +95,7 @@ def challenge(day):
 
 
 def current_day():
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(TIMEZONE).date()
     return ((today - START_DATE).days % 30) + 1
 
 
@@ -217,7 +219,7 @@ def main():
 
     app.job_queue.run_daily(
         daily_reminder,
-        time=time(hour=REMINDER_HOUR, minute=REMINDER_MINUTE, tzinfo=timezone.utc),
+        time=time(hour=REMINDER_HOUR, minute=REMINDER_MINUTE, tzinfo=TIMEZONE),
     )
 
     app.run_polling()
