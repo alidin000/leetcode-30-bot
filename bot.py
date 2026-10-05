@@ -165,37 +165,51 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("\n".join(message))
 
 
+async def record_submission(update: Update, url: str):
+    chat_id = update.effective_chat.id
+    user_id = update.effective_user.id
+    day = current_day()
+    conn = db()
+    existing = conn.execute(
+        "SELECT 1 FROM submissions WHERE chat_id=? AND user_id=? AND day=?",
+        (chat_id, user_id, day),
+    ).fetchone()
+    if existing:
+        conn.close()
+        await update.message.reply_text(f"⚠️ You already submitted Day {day}.")
+        return
+    conn.execute(
+        "INSERT INTO submissions(chat_id,user_id,day,url,submitted_at) VALUES(?,?,?,?,?)",
+        (chat_id, user_id, day, url, datetime.now(timezone.utc).isoformat()),
+    )
+    conn.commit()
+    conn.close()
+    await update.message.reply_text(f"✅ Day {day} recorded for {update.effective_user.first_name}!")
+
+
+async def submit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    register_user(update)
+    if not context.args:
+        await update.message.reply_text(
+            "Send your LeetCode submission link like:\n"
+            "/submit https://leetcode.com/submissions/detail/123456789/"
+        )
+        return
+    match = LEETCODE_URL.search(context.args[0])
+    if not match:
+        await update.message.reply_text("❌ That doesn't look like a LeetCode submission link.")
+        return
+    await record_submission(update, match.group(0))
+
+
 async def submission(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         return
     match = LEETCODE_URL.search(update.message.text)
     if not match:
         return
-
     register_user(update)
-    chat_id = update.effective_chat.id
-    user_id = update.effective_user.id
-    day = current_day()
-    url = match.group(0)
-
-    conn = db()
-    existing = conn.execute(
-        "SELECT 1 FROM submissions WHERE chat_id=? AND user_id=? AND day=?",
-        (chat_id, user_id, day),
-    ).fetchone()
-
-    if existing:
-        await update.message.reply_text(f"⚠️ You already submitted Day {day}.")
-    else:
-        conn.execute(
-            "INSERT INTO submissions(chat_id,user_id,day,url,submitted_at) VALUES(?,?,?,?,?)",
-            (chat_id, user_id, day, url, datetime.now(timezone.utc).isoformat()),
-        )
-        conn.commit()
-        await update.message.reply_text(
-            f"✅ Day {day} recorded for {update.effective_user.first_name}!"
-        )
-    conn.close()
+    await record_submission(update, match.group(0))
 
 
 async def daily_reminder(context: ContextTypes.DEFAULT_TYPE):
@@ -217,6 +231,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("today", today))
+    app.add_handler(CommandHandler("submit", submit_command))
     app.add_handler(CommandHandler("progress", progress))
     app.add_handler(CommandHandler("leaderboard", leaderboard))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, submission))
