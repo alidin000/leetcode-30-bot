@@ -110,7 +110,14 @@ def github_request(method, path, payload=None):
     try:
         with urlopen(Request(url, data=data, headers=headers, method=method), timeout=15) as response:
             return json.loads(response.read().decode("utf-8"))
-    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError):
+    except HTTPError as exc:
+        try:
+            body = exc.read().decode("utf-8", errors="replace")
+        except Exception:
+            body = ""
+        logging.error("GitHub API error %s for %s: %s", exc.code, path, body[:1000])
+        return None
+    except (URLError, TimeoutError, json.JSONDecodeError):
         logging.exception("GitHub backup request failed")
         return None
 
@@ -352,9 +359,20 @@ async def record_submission(update: Update, url: str):
     )
     conn.commit()
     conn.close()
-    await asyncio.to_thread(backup_to_github)
-    await update.message.reply_text(f"✅ Day {day} recorded for {update.effective_user.first_name}!")
+    backup_ok = await asyncio.to_thread(backup_to_github)
+    if backup_ok:
+        await update.message.reply_text(f"✅ Day {day} recorded for {update.effective_user.first_name}!\n💾 Backup saved.")
+    else:
+        await update.message.reply_text(f"✅ Day {day} recorded for {update.effective_user.first_name}!\n⚠️ GitHub backup failed — the submission is saved locally, but it may be lost if Render restarts.")
 
+
+async def backup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    register_user(update)
+    ok = await asyncio.to_thread(backup_to_github)
+    if ok:
+        await update.message.reply_text("💾 Backup completed successfully.")
+    else:
+        await update.message.reply_text("❌ Backup failed. Check the Render logs and GitHub token permissions.")
 
 async def submit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(update)
@@ -403,6 +421,7 @@ def main():
     app.add_handler(CommandHandler("today", today))
     app.add_handler(CommandHandler("random", random_problem))
     app.add_handler(CommandHandler("submit", submit_command))
+    app.add_handler(CommandHandler("backup", backup_command))
     app.add_handler(CommandHandler("progress", progress))
     app.add_handler(CommandHandler("leaderboard", leaderboard))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, submission))
