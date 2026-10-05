@@ -1,3 +1,6 @@
+import asyncio
+import base64
+import json
 import logging
 import os
 import re
@@ -5,6 +8,9 @@ import random
 import sqlite3
 from datetime import datetime, time, timezone
 from zoneinfo import ZoneInfo
+from urllib.error import HTTPError, URLError
+from urllib.parse import quote
+from urllib.request import Request, urlopen
 
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
@@ -16,6 +22,11 @@ RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL", "")
 REMINDER_HOUR = int(os.environ.get("REMINDER_HOUR", "19"))
 REMINDER_MINUTE = int(os.environ.get("REMINDER_MINUTE", "0"))
 TIMEZONE = ZoneInfo(os.environ.get("TIMEZONE", "Europe/Budapest"))
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
+GITHUB_BACKUP_REPO = os.environ.get("GITHUB_BACKUP_REPO", "alidin000/leetcode-30-bot")
+GITHUB_BACKUP_BRANCH = os.environ.get("GITHUB_BACKUP_BRANCH", "data-backup")
+GITHUB_BACKUP_PATH = os.environ.get("GITHUB_BACKUP_PATH", "data/backup.json")
+
 START_DATE = datetime.fromisoformat(os.environ.get("CHALLENGE_START_DATE", datetime.now(timezone.utc).date().isoformat())).date()
 
 CHALLENGES = [
@@ -184,6 +195,7 @@ async def record_submission(update: Update, url: str):
     )
     conn.commit()
     conn.close()
+    await asyncio.to_thread(backup_to_github)
     await update.message.reply_text(f"✅ Day {day} recorded for {update.effective_user.first_name}!")
 
 
@@ -227,6 +239,7 @@ async def daily_reminder(context: ContextTypes.DEFAULT_TYPE):
 def main():
     logging.basicConfig(level=logging.INFO)
     db()
+    restore_from_github()
     app = Application.builder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
