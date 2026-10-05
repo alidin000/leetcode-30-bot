@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import random
 import sqlite3
 from datetime import datetime, time, timezone
 from zoneinfo import ZoneInfo
@@ -50,7 +51,7 @@ CHALLENGES = [
     ("Trapping Rain Water", "https://leetcode.com/problems/trapping-rain-water/"),
 ]
 
-LEETCODE_URL = re.compile(r"https?://(?:www\.)?leetcode\.com/submissions/detail/[\w-]+/?", re.I)
+LEETCODE_URL = re.compile(r"https?://(?:www\.)?leetcode\.com/submissions(?:/detail)?/[^\s)]+", re.I)
 
 
 def db():
@@ -93,7 +94,8 @@ def register_user(update):
 
 
 def challenge(day):
-    return CHALLENGES[(day - 1) % len(CHALLENGES)]
+    shuffled = random.Random(START_DATE.toordinal()).sample(CHALLENGES, len(CHALLENGES))
+    return shuffled[(day - 1) % len(shuffled)]
 
 
 def current_day():
@@ -221,7 +223,18 @@ def main():
 
     app.job_queue.run_daily(
         daily_reminder,
-        time=time(hour=REMINDER_HOUR, minute=REMINDER_MINUTE, tzinfo=TIMEZONE),
+        time=time(hour=9, minute=0, tzinfo=TIMEZONE),
+        name="morning_reminder",
+    )
+    app.job_queue.run_daily(
+        daily_reminder,
+        time=time(hour=14, minute=0, tzinfo=TIMEZONE),
+        name="afternoon_reminder",
+    )
+    app.job_queue.run_daily(
+        daily_reminder,
+        time=time(hour=19, minute=0, tzinfo=TIMEZONE),
+        name="evening_reminder",
     )
 
     if not RENDER_EXTERNAL_URL:
