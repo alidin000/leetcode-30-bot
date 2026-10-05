@@ -4,6 +4,20 @@ services:
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: python bot.py
+    disk:
+      name: leetcode30-data
+      mountPath: /data
+      sizeGB: 1
     envVars:
       - key: TELEGRAM_BOT_TOKEN
         sync: false
+      - key: DB_PATH
+        value: /data/leetcode30.db
+      - key: CHALLENGE_START_DATE
+        value: 2026-10-06
+      - key: REMINDER_HOUR
+        value: 19
+      - key: REMINDER_MINUTE
+        value: 0
+      - key: TIMEZONE
+        value: Europe/Budapest
