@@ -282,6 +282,15 @@ async def today(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(challenge_message(current_day()))
 
 
+async def random_problem(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    register_user(update)
+    daily_name, _ = challenge(current_day())
+    choices = [problem for problem in CHALLENGES if problem[0] != daily_name]
+    name, url = random.choice(choices)
+    await update.message.reply_text(
+        f"🎲 Random LeetCode problem\n\n{name}\n{url}"
+    )
+
 async def progress(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(update)
     chat_id = update.effective_chat.id
@@ -392,6 +401,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("today", today))
+    app.add_handler(CommandHandler("random", random_problem))
     app.add_handler(CommandHandler("submit", submit_command))
     app.add_handler(CommandHandler("progress", progress))
     app.add_handler(CommandHandler("leaderboard", leaderboard))
