@@ -230,7 +230,7 @@ def main():
         listen="0.0.0.0",
         port=PORT,
         url_path=TOKEN,
-        webhook_url=f"{RENDER_EXTERNAL_URL.rstrip('/')}/{TOKEN}",
+        webhook_url=f"https://{RENDER_EXTERNAL_URL.rstrip('/').removeprefix('https://').removeprefix('http://')}/{TOKEN}",
         drop_pending_updates=True,
     )
 
