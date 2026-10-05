@@ -10,6 +10,8 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 DB_PATH = os.environ.get("DB_PATH", "leetcode30.db")
+PORT = int(os.environ.get("PORT", "10000"))
+RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL", "")
 REMINDER_HOUR = int(os.environ.get("REMINDER_HOUR", "19"))
 REMINDER_MINUTE = int(os.environ.get("REMINDER_MINUTE", "0"))
 TIMEZONE = ZoneInfo(os.environ.get("TIMEZONE", "Europe/Budapest"))
@@ -96,7 +98,7 @@ def challenge(day):
 
 def current_day():
     today = datetime.now(TIMEZONE).date()
-    return ((today - START_DATE).days % 30) + 1
+    return min(30, max(1, (today - START_DATE).days + 1))
 
 
 def challenge_message(day):
@@ -222,7 +224,15 @@ def main():
         time=time(hour=REMINDER_HOUR, minute=REMINDER_MINUTE, tzinfo=TIMEZONE),
     )
 
-    app.run_polling()
+    if not RENDER_EXTERNAL_URL:
+        raise RuntimeError("RENDER_EXTERNAL_URL must be set for webhook mode")
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        url_path=TOKEN,
+        webhook_url=f"{RENDER_EXTERNAL_URL.rstrip('/')}/{TOKEN}",
+        drop_pending_updates=True,
+    )
 
 
 if __name__ == "__main__":
