@@ -7,6 +7,14 @@ services:
     envVars:
       - key: TELEGRAM_BOT_TOKEN
         sync: false
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: GITHUB_BACKUP_REPO
+        value: alidin000/leetcode-30-bot
+      - key: GITHUB_BACKUP_BRANCH
+        value: data-backup
+      - key: GITHUB_BACKUP_PATH
+        value: data/backup.json
       - key: RENDER_EXTERNAL_URL
         fromService:
           type: web
@@ -14,10 +22,6 @@ services:
           property: host
       - key: CHALLENGE_START_DATE
         value: 2026-10-06
-      - key: REMINDER_HOUR
-        value: 19
-      - key: REMINDER_MINUTE
-        value: 0
       - key: TIMEZONE
         value: Europe/Budapest
       - key: DB_PATH
