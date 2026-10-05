@@ -92,6 +92,154 @@ def db():
     return conn
 
 
+def github_request(method, path, payload=None):
+    if not GITHUB_TOKEN:
+        return None
+
+    url = f"https://api.github.com/repos/{GITHUB_BACKUP_REPO}/contents/{quote(path, safe='/')}"
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "leetcode-30-bot",
+    }
+    data = json.dumps(payload).encode("utf-8") if payload is not None else None
+    if data is not None:
+        headers["Content-Type"] = "application/json"
+
+    try:
+        with urlopen(Request(url, data=data, headers=headers, method=method), timeout=15) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError):
+        logging.exception("GitHub backup request failed")
+        return None
+
+
+def backup_to_github():
+    if not GITHUB_TOKEN:
+        logging.warning("GITHUB_TOKEN is not configured; backup skipped.")
+        return False
+
+    conn = db()
+    users = [
+        {
+            "chat_id": row[0],
+            "user_id": row[1],
+            "username": row[2],
+            "first_name": row[3],
+        }
+        for row in conn.execute(
+            "SELECT chat_id, user_id, username, first_name FROM users"
+        ).fetchall()
+    ]
+    submissions = [
+        {
+            "chat_id": row[0],
+            "user_id": row[1],
+            "day": row[2],
+            "url": row[3],
+            "submitted_at": row[4],
+        }
+        for row in conn.execute(
+            "SELECT chat_id, user_id, day, url, submitted_at FROM submissions"
+        ).fetchall()
+    ]
+    conn.close()
+
+    backup = {
+        "version": 1,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "users": users,
+        "submissions": submissions,
+    }
+    content = base64.b64encode(
+        (json.dumps(backup, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+    ).decode("ascii")
+
+    existing = github_request(
+        "GET",
+        f"{GITHUB_BACKUP_PATH}?ref={quote(GITHUB_BACKUP_BRANCH, safe='')}",
+    )
+
+    payload = {
+        "message": "Update challenge data backup",
+        "content": content,
+        "branch": GITHUB_BACKUP_BRANCH,
+    }
+    if existing and existing.get("sha"):
+        payload["sha"] = existing["sha"]
+
+    result = github_request("PUT", GITHUB_BACKUP_PATH, payload)
+    if result:
+        logging.info("Challenge data backed up to GitHub.")
+        return True
+
+    logging.error("Challenge data backup failed.")
+    return False
+
+
+def restore_from_github():
+    if not GITHUB_TOKEN:
+        logging.warning("GITHUB_TOKEN is not configured; restore skipped.")
+        return False
+
+    conn = db()
+    users_count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    submissions_count = conn.execute("SELECT COUNT(*) FROM submissions").fetchone()[0]
+    conn.close()
+
+    if users_count or submissions_count:
+        return False
+
+    result = github_request(
+        "GET",
+        f"{GITHUB_BACKUP_PATH}?ref={quote(GITHUB_BACKUP_BRANCH, safe='')}",
+    )
+    if not result or not result.get("content"):
+        return False
+
+    try:
+        backup = json.loads(base64.b64decode(result["content"]).decode("utf-8"))
+    except (ValueError, UnicodeDecodeError, KeyError):
+        logging.exception("Invalid GitHub backup.")
+        return False
+
+    conn = db()
+    conn.executemany(
+        "INSERT OR REPLACE INTO users(chat_id,user_id,username,first_name) VALUES(?,?,?,?)",
+        [
+            (
+                row["chat_id"],
+                row["user_id"],
+                row.get("username"),
+                row.get("first_name"),
+            )
+            for row in backup.get("users", [])
+        ],
+    )
+    conn.executemany(
+        "INSERT OR IGNORE INTO submissions(chat_id,user_id,day,url,submitted_at) VALUES(?,?,?,?,?)",
+        [
+            (
+                row["chat_id"],
+                row["user_id"],
+                row["day"],
+                row["url"],
+                row["submitted_at"],
+            )
+            for row in backup.get("submissions", [])
+        ],
+    )
+    conn.commit()
+    conn.close()
+    logging.info(
+        "Restored %s users and %s submissions from GitHub.",
+        len(backup.get("users", [])),
+        len(backup.get("submissions", [])),
+    )
+    return True
+
+
 def register_user(update):
     chat = update.effective_chat
     user = update.effective_user
