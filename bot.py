@@ -11,6 +11,7 @@ TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 DB_PATH = os.environ.get("DB_PATH", "leetcode30.db")
 REMINDER_HOUR = int(os.environ.get("REMINDER_HOUR", "19"))
 REMINDER_MINUTE = int(os.environ.get("REMINDER_MINUTE", "0"))
+START_DATE = datetime.fromisoformat(os.environ.get("CHALLENGE_START_DATE", datetime.now(timezone.utc).date().isoformat())).date()
 
 CHALLENGES = [
     ("Two Sum", "https://leetcode.com/problems/two-sum/"),
@@ -80,7 +81,7 @@ def register_user(update):
     user = update.effective_user
     conn = db()
     conn.execute(
-        "INSERT OR REPLACE INTO users(chat_id,user_id,username,first_name) VALUES(?,?,?,?,?)",
+        "INSERT OR REPLACE INTO users(chat_id,user_id,username,first_name) VALUES(?,?,?,?)",
         (chat.id, user.id, user.username, user.first_name),
     )
     conn.commit()
@@ -92,8 +93,8 @@ def challenge(day):
 
 
 def current_day():
-    start = datetime.now(timezone.utc).date()
-    return ((start - start).days % 30) + 1
+    today = datetime.now(timezone.utc).date()
+    return ((today - START_DATE).days % 30) + 1
 
 
 def challenge_message(day):
