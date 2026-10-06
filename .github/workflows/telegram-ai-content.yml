@@ -72,20 +72,20 @@ jobs:
 
           if test_message:
               message = (
-                  f"🧪 <b>AI Content Test — Day {content['day']}</b>\n\n"
+                  f"🧪 <b>Interview Intel Test — Day {content['day']}</b>\n\n"
                   f"<b>{content['morning_concept']}</b>\n"
                   f"{content['morning_concept_explanation']}\n\n"
                   f"🌙 <b>Evening:</b> {content['evening_feedback']}"
               )
           elif hour == 9:
               message = (
-                  f"🌅 <b>Day {content['day']} — Morning Concept</b>\n\n"
+                  f"🌅 <b>Day {content['day']} — Interview Intel</b>\n\n"
                   f"<b>{content['morning_concept']}</b>\n"
                   f"{content['morning_concept_explanation']}"
               )
           elif hour == 19:
               message = (
-                  f"🌙 <b>Day {content['day']} — Evening Feedback</b>\n\n"
+                  f"🌙 <b>Day {content['day']} — Candidate Feedback</b>\n\n"
                   f"{content['evening_feedback']}"
               )
           else:
