@@ -65,7 +65,13 @@ jobs:
               raise SystemExit("No Telegram chat IDs found in data-backup/data/backup.json.")
 
           with open("ai/daily_content.json", encoding="utf-8") as f:
-              content = json.load(f)
+              try:
+                  content = json.load(f)
+              except json.JSONDecodeError as exc:
+                  raise SystemExit(
+                      f"Invalid ai/daily_content.json on main at line {exc.lineno}, "
+                      f"column {exc.colno}: {exc.msg}"
+                  )
 
           def format_content(raw, drop_first_heading=None):
               """Preserve the AI-written lesson and style headings only."""
