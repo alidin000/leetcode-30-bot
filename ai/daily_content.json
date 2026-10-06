@@ -1,12 +1,44 @@
 {
   "day": 1,
   "date": "2026-10-06",
-  "morning_concept": "Amazon SDE II — System Design: URL Shortener at scale",
-  "morning_concept_explanation": "A 2026 SDE II candidate report describes a system-design round that started with a URL shortener and then pushed into 10B URLs, click analytics, a redirect-service outage, and hot keys from viral links. Treat this as a real candidate anecdote rather than proof of a recurring Amazon question; the broader Amazon report data shows system design in 30% of 79 SWE reports and coding in 78%. Sources: https://primly.io/c/interview-leaks/thread/primly-human-interview-leaks-x-amazon-sde2-system-design-2026 and https://askedbefore.io/interview/company/amazon. Likely follow-ups: how would you scale reads, handle hot keys, make redirects highly available, and separate analytics from the critical path? What it tests: requirements clarification, capacity thinking, failure handling, caching/partitioning tradeoffs, and communication under follow-up pressure.",
-  "evening_feedback": "Candidate feedback: recent Amazon SDE/SDE II reports commonly describe a multi-round loop with coding plus behavioral, and system design appears regularly enough to matter for mid-level preparation. The strongest repeated signal is that interviews probe beyond the first workable design: candidates report follow-up drilling on scale, failure modes, and tradeoffs. Separate reports should be treated as corroborating patterns, not guarantees for every team. Sources: https://www.inbyte.org/interview/amazon and https://askedbefore.io/interview/company/amazon. One-off example: an SDE II candidate reported spending about 15 minutes on the high-level URL-shortener design before roughly 30 minutes of edge-case follow-ups.",
-  "next_morning_concept": "Meta SWE — System Design: compound status-search service",
-  "next_morning_concept_explanation": "A 2026 Meta senior-SWE candidate report describes a system-design round for a status-search service supporting compound AND/OR queries. Treat it as one candidate report, then use the broader Meta evidence to discuss why design rounds increasingly test requirement clarification, data modeling, query strategy, scale, and tradeoffs. Source: https://www.reddit.com/r/OfferEngineering/comments/1vuk7zu/meta_senior_swe_interview_process_august_2026/; corroborating recent Meta interview reporting: https://www.inbyte.org/interview/meta.",
-  "next_evening_feedback": "For the Meta follow-up, summarize candidate-reported signals around coding speed, AI-assisted coding, system-design depth, and behavioral follow-ups, while clearly separating repeated themes from individual anecdotes. Ask what changed when the interviewer generalized the problem or added constraints, and what that reveals about the evaluation.",
+  "morning_concept": "🎯 Databricks — SWE System Programming: concurrency under real-world constraints",
+  "morning_concept_explanation": "🎯 Bottom line: Databricks is a strong example of a company where interviewers may test whether you can reason about software that must stay correct under concurrency, not just whether you know a few synchronization primitives. Inbyte’s September 2026 synthesis says 6 of 7 Databricks reports from July–August 2026 that listed onsite rounds included a concurrency round, and 4 of those reports mentioned a log/file-writer task. Databricks’ own interview-prep material describes System Programming as covering multithreading, synchronization, I/O, performance, files, buffering, caching, storage, and practical trade-offs.
+
+💼 Company / round: Databricks · Software Engineering · System Programming / technical round
+
+❓ What candidates reported: a recurring pattern is a practical systems component such as a log or file writer, where the candidate has to make concurrent access correct and then reason about the performance implications. One recent Databricks report describes a key-value store plus a hit counter under concurrent access, with the discussion moving from coarse-grained locks toward finer-grained approaches and validation.
+
+🧩 The hidden difficulty: the first correct idea is usually not the whole interview. The interesting part is what happens when the interviewer changes the constraint: many readers, concurrent writers, high throughput, large files, partial failures, or a requirement to preserve ordering. A solution that is technically safe can still be a poor engineering choice if lock contention destroys throughput.
+
+📈 Signal: 🟢 Repeated pattern, not a guaranteed exact question. Inbyte reports concurrency in 6/7 recent July–August 2026 reports that listed onsite rounds, with a log/file-writer task appearing in 4. This is much stronger evidence than a single candidate post, but it is still a self-selected interview-report sample.
+
+🔁 What happened next: reported or strongly preparation-relevant follow-ups include: What race condition can occur here? What if reads dominate writes? How would you reduce lock contention? What if the process crashes while buffered data is waiting to be written? How would you test the design under concurrent load? These are preparation examples unless explicitly tied to a specific report.
+
+🧠 What they are really testing: correctness under concurrency; understanding of synchronization and contention; ability to reason about I/O and buffering; performance trade-offs; test strategy; and whether you can explain why a design is safe rather than simply naming a lock.
+
+🧭 Best way to prepare: practice taking one simple component—a counter, cache, queue, or file writer—and answering the same five questions: What can race? What must be atomic? Where is the bottleneck? What happens on failure? How would I prove it works? Do that before memorizing mutex vs. rw-lock vs. lock-free terminology.
+
+📝 Interviewer lens: a strong candidate makes the invariants visible: what must never happen, what can happen concurrently, and what trade-off each synchronization choice introduces.
+
+🔎 Sources: https://www.inbyte.org/interview/guides/databricks-software-engineer-interview · https://www.databricks.com/sites/default/files/2025-04/engineering-careers-site-interview-prep-april-2025-002.pdf · https://www.screna.ai/interview-questions/databricks",
+  "evening_feedback": "🌙 Bottom line: the useful lesson from Databricks reports is not 'learn concurrency questions'. It is that strong interviewers can take a familiar programming task and keep adding production constraints until your engineering judgment becomes visible.
+
+📊 What repeats: Inbyte’s September 2026 synthesis is unusually useful because it gives a defined sample: 21 Databricks software-engineering reports dated July–September 2026, with 14 describing interview rounds. Of the 7 July–August reports that listed onsite rounds, 6 included a concurrency round; 4 of those named a log or file-writer task. That is a meaningful recurring signal, although it does not represent every Databricks team or candidate.
+
+⏱ What the interview felt like: the reports point toward technical rounds that can become deeper than the opening implementation. The candidate is not only expected to produce working pseudocode; they may need to discuss synchronization, buffering, I/O, performance, and how the design behaves under changing load. Databricks’ own preparation guide confirms that these are intentional evaluation areas rather than accidental trivia.
+
+🔁 Follow-up pattern: a productive way to think about the round is constraint escalation: 'Make it correct' → 'Make it concurrent' → 'Make it faster' → 'Now the workload is different' → 'Now something fails' → 'How do you test it?' The exact sequence varies; the recurring skill is adapting the design without losing correctness.
+
+🏢 Company-specific signal: Databricks explicitly describes separate System Programming and Architecture interviews, and its official prep material calls out concurrency, files, buffering, caching, storage, APIs, networking, replication, consistency, and failure handling. That makes systems fundamentals particularly relevant for candidates targeting software-engineering roles there.
+
+⚠️ Evidence caveat: the 6/7 and 4-report figures come from Inbyte’s curated candidate-report sample, not from Databricks hiring data. Candidate-report sites can also be biased toward people who choose to publish their experiences. Use this as a preparation signal, not a prediction of your exact loop.
+
+📚 What to do with this: add one weekly 'production coding' session alongside LeetCode. Take a small concurrent component and explicitly discuss correctness, contention, failure, and testing. That builds a skill that ordinary algorithm practice does not fully cover.
+
+🔎 Sources: https://www.inbyte.org/interview/guides/databricks-software-engineer-interview · https://www.databricks.com/sites/default/files/2025-04/engineering-careers-site-interview-prep-april-2025-002.pdf · https://www.screna.ai/interview-questions/databricks",
+  "next_morning_concept": "🎯 Uber — Onsite coding that turns into a production problem",
+  "next_morning_concept_explanation": "Use a recent 2026 Uber candidate report to explore a different interview pattern: start with a familiar coding problem, then follow-ups introduce continuously arriving data, real-world constraints, or service behavior. Focus on how to recognize when an algorithm interview is really testing adaptability, state management, and production thinking. Source: https://www.reddit.com/r/OfferEngineering/comments/1vr13l1/uber_senior_software_engineer_interview_process/",
+  "next_evening_feedback": "Compare several recent Uber reports and look for repeated signals around fast pacing, follow-up-heavy rounds, and the transition from a simple algorithm to a larger engineering constraint. Separate recurring themes from single-candidate anecdotes and turn the findings into concrete preparation changes.",
   "next_day": 2,
   "generated_at": "2026-10-06T10:44:00+02:00"
 }
