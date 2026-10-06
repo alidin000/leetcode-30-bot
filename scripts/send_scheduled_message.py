@@ -79,7 +79,7 @@ def load_backup():
 
 def mention(user_id, first_name, username):
     display = f"@{username}" if username else (first_name or "participant")
-    return f'<a href="tg://user?id={user_id}">{html.escape(display)}"'
+    return f'<a href="tg://user?id={user_id}">{html.escape(display)}</a>'
 
 def send_telegram(chat_id, text):
     token = os.environ["TELEGRAM_BOT_TOKEN"]
