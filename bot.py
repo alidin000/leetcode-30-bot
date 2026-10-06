@@ -979,7 +979,10 @@ async def daily_reminder(context: ContextTypes.DEFAULT_TYPE):
             )
         except Exception:
             logging.exception("Failed to send reminder to %s", chat_id)
-\n    # Keep GitHub as the durable copy of the live SQLite state.\n    await asyncio.to_thread(backup_to_github)\n
+
+    # Keep GitHub as the durable copy of the live SQLite state.
+    await asyncio.to_thread(backup_to_github)
+
 
 async def test_tag(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(update)
