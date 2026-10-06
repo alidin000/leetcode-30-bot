@@ -43,6 +43,7 @@ query questionData($titleSlug: String!) {
     difficulty
   }
 }
+"""
 
 CHALLENGES = [
     ("Two Sum", "https://leetcode.com/problems/two-sum/"),
@@ -77,7 +78,13 @@ CHALLENGES = [
     ("Trapping Rain Water", "https://leetcode.com/problems/trapping-rain-water/"),
 ]
 
-LEETCODE_URL = re.compile(r"https?://(?:www\.)?leetcode\.com/(?:problems/[^/\s]+/(?:submissions(?:/detail)?/[^\s)]+|\d+/?(?:\?[^\s)]*)?)|submissions(?:/detail)?/[^\s)]+)", re.I)
+LEETCODE_URL = re.compile(
+    r"https?://(?:www\.)?leetcode\.com/(?:"
+    r"problems/[^/\s]+/submissions(?:/detail)?/[^\s)]+"
+    r"|submissions(?:/detail)?/[^\s)]+"
+    r")",
+    re.I,
+)
 
 
 def db():
@@ -723,7 +730,7 @@ def incomplete_users(chat_id, day):
         WHERE u.chat_id=?
           AND NOT EXISTS (
               SELECT 1
-              FROM submissions s
+              FROM competition_submissions s
               WHERE s.chat_id=u.chat_id
                 AND s.user_id=u.user_id
                 AND s.day=?
