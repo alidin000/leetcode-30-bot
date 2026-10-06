@@ -1,18 +1,32 @@
-import base64
-import hashlib
 import html
 import json
 import os
-import random
+import re
 import subprocess
 import urllib.parse
 import urllib.request
 from datetime import datetime
+from urllib.error import HTTPError, URLError
 from zoneinfo import ZoneInfo
 
 TIMEZONE = ZoneInfo("Europe/Budapest")
 START_DATE = datetime.fromisoformat("2026-10-06").date()
 AI_FILE = "ai/daily_content.json"
+
+POINTS_BY_DIFFICULTY = {
+    "EASY": 1,
+    "MEDIUM": 2,
+    "HARD": 4,
+}
+LEETCODE_GRAPHQL_API = "https://leetcode.com/graphql"
+QUESTION_METADATA_QUERY = """
+query questionData($titleSlug: String!) {
+  question(titleSlug: $titleSlug) {
+    title
+    difficulty
+  }
+}
+"""
 
 CHALLENGES = [
     ("Two Sum", "https://leetcode.com/problems/two-sum/"),
@@ -52,6 +66,7 @@ def current_day():
     return min(30, max(1, (today - START_DATE).days + 1))
 
 def challenge(day):
+    import random
     shuffled = random.Random(START_DATE.toordinal()).sample(CHALLENGES, len(CHALLENGES))
     return shuffled[(day - 1) % len(shuffled)]
 
@@ -64,7 +79,7 @@ def load_backup():
 
 def mention(user_id, first_name, username):
     display = f"@{username}" if username else (first_name or "participant")
-    return f'<a href="tg://user?id={user_id}">{html.escape(display)}</a>'
+    return f'<a href="tg://user?id={user_id}">{html.escape(display)}"'
 
 def send_telegram(chat_id, text):
     token = os.environ["TELEGRAM_BOT_TOKEN"]
@@ -88,63 +103,219 @@ def mode():
     schedule = os.environ.get("SCHEDULE", "")
     return "morning" if schedule.startswith("0 9") else "evening"
 
+_metadata_cache = {}
+
+def extract_problem_slug(url):
+    match = re.search(r"https?://(?:www\.)?leetcode\.com/problems/([^/?\s]+)/submissions(?:/|$)", url, re.I)
+    return match.group(1).lower() if match else None
+
+def fetch_problem_metadata(problem_slug):
+    if problem_slug in _metadata_cache:
+        return _metadata_cache[problem_slug]
+
+    payload = json.dumps({
+        "query": QUESTION_METADATA_QUERY,
+        "variables": {"titleSlug": problem_slug},
+    }).encode("utf-8")
+    request = urllib.request.Request(
+        LEETCODE_GRAPHQL_API,
+        data=payload,
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "leetcode-30-bot/2.0",
+            "Referer": f"https://leetcode.com/problems/{problem_slug}/",
+        },
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=15) as response:
+            body = json.loads(response.read().decode("utf-8"))
+    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError):
+        return None
+
+    question = (body.get("data") or {}).get("question")
+    difficulty = question.get("difficulty") if question else None
+    title = question.get("title") if question else None
+    if not title or difficulty not in POINTS_BY_DIFFICULTY:
+        return None
+
+    metadata = {
+        "title": title,
+        "difficulty": difficulty,
+        "points": POINTS_BY_DIFFICULTY[difficulty],
+    }
+    _metadata_cache[problem_slug] = metadata
+    return metadata
+
+def build_competition_entries(backup):
+    """
+    Prefer the enriched competition_submissions written by the new bot.
+    Also understand legacy submissions where a problem slug is visible in the URL.
+    """
+    source = backup.get("competition_submissions") or []
+    if not source:
+        source = backup.get("submissions", [])
+
+    entries = []
+    seen = set()
+
+    for row in source:
+        chat_id = row.get("chat_id")
+        user_id = row.get("user_id")
+        problem_slug = (row.get("problem_slug") or extract_problem_slug(row.get("url", "")))
+        if chat_id is None or user_id is None or not problem_slug:
+            continue
+
+        key = (str(chat_id), str(user_id), problem_slug)
+        if key in seen:
+            continue
+
+        difficulty = row.get("difficulty")
+        points = row.get("points")
+        title = row.get("problem_title")
+
+        if difficulty not in POINTS_BY_DIFFICULTY or points is None or not title:
+            metadata = fetch_problem_metadata(problem_slug)
+            if not metadata:
+                continue
+            difficulty = metadata["difficulty"]
+            points = metadata["points"]
+            title = metadata["title"]
+
+        seen.add(key)
+        entries.append({
+            "chat_id": chat_id,
+            "user_id": user_id,
+            "day": int(row.get("day", 0)),
+            "problem_slug": problem_slug,
+            "problem_title": title,
+            "difficulty": difficulty,
+            "points": int(points),
+            "url": row.get("url", ""),
+            "submitted_at": row.get("submitted_at", ""),
+        })
+
+    return entries
+
+def leaderboard_for_chat(entries, users, chat_id, day):
+    by_user = {}
+    for entry in entries:
+        if str(entry["chat_id"]) != str(chat_id) or entry["day"] != day:
+            continue
+        key = entry["user_id"]
+        bucket = by_user.setdefault(key, {"questions": 0, "points": 0})
+        bucket["questions"] += 1
+        bucket["points"] += entry["points"]
+
+    results = []
+    for user in users:
+        if str(user.get("chat_id")) != str(chat_id):
+            continue
+        key = user["user_id"]
+        bucket = by_user.get(key, {"questions": 0, "points": 0})
+        results.append({
+            "user_id": key,
+            "first_name": user.get("first_name"),
+            "username": user.get("username"),
+            "questions": bucket["questions"],
+            "points": bucket["points"],
+        })
+
+    results.sort(key=lambda row: (-row["points"], -row["questions"], (row["first_name"] or "").lower()))
+    return results
+
+def morning_text(day):
+    name, url = challenge(day)
+    return (
+        f"🌅 <b>Day {day}/30 — LeetCode Competition</b>\n\n"
+        f"🧠 <b>Official challenge: {html.escape(name)}</b>\n"
+        f"{url}\n\n"
+        "⚔️ <b>Competition rules</b>\n"
+        "Submit any LeetCode problem you solve today — every unique problem counts.\n"
+        "🟢 Easy = 1 point\n"
+        "🟠 Medium = 2 points\n"
+        "🔴 Hard = 4 points\n\n"
+        "🚫 The same problem can only score once per participant during the 30-day challenge.\n"
+        "🏆 At the end of the day, the highest score wins."
+    )
+
+def evening_text(day, entries, users, chat_id):
+    name, url = challenge(day)
+    rows = leaderboard_for_chat(entries, users, chat_id, day)
+
+    lines = [
+        f"🏆 <b>Day {day}/30 — Competition Results</b>",
+        "",
+        f"🧠 Official challenge: <b>{html.escape(name)}</b>",
+        f"<a href="{url}">Open problem</a>",
+        "",
+        "📊 <b>Daily leaderboard</b>",
+    ]
+
+    for index, row in enumerate(rows, 1):
+        display = f"@{row['username']}" if row["username"] else (row["first_name"] or "participant")
+        lines.append(
+            f"{index}. {html.escape(display)} — "
+            f"{row['questions']} question{'s' if row['questions'] != 1 else ''} · "
+            f"{row['points']} pts"
+        )
+
+    if not rows:
+        lines.extend(["", "No participants are registered for this chat."])
+        return "\n".join(lines)
+
+    top = rows[0]
+    tied = [
+        row for row in rows
+        if row["points"] == top["points"] and row["questions"] == top["questions"]
+    ]
+
+    if top["questions"] == 0:
+        lines.extend(["", "🤝 <b>No winner today</b> — nobody submitted a counted problem."])
+    elif len(tied) == 1:
+        display = f"@{top['username']}" if top["username"] else (top["first_name"] or "participant")
+        lines.extend([
+            "",
+            f"🥇 <b>Winner: {html.escape(display)}</b>",
+            f"{top['points']} pts from {top['questions']} unique question{'s' if top['questions'] != 1 else ''}.",
+        ])
+    else:
+        displays = [
+            f"@{row['username']}" if row["username"] else (row["first_name"] or "participant")
+            for row in tied
+        ]
+        lines.extend([
+            "",
+            f"🥇 <b>Joint winners: {html.escape(', '.join(displays))}</b>",
+            f"{top['points']} pts from {top['questions']} unique questions each.",
+        ])
+
+    lines.extend([
+        "",
+        "⚔️ Scoring: Easy 1 · Medium 2 · Hard 4",
+        "🚫 Duplicate problems are ignored for scoring.",
+    ])
+    return "\n".join(lines)
+
 def main():
     day = current_day()
-    name, url = challenge(day)
     backup = load_backup()
     users = backup.get("users", [])
-    submissions = backup.get("submissions", [])
-    submitted = {
-        (row["chat_id"], row["user_id"])
-        for row in submissions
-        if row["day"] == day
-    }
-
-    with open(AI_FILE, encoding="utf-8") as f:
-        ai = json.load(f)
-
+    entries = build_competition_entries(backup)
     selected_mode = mode()
     chats = sorted({row["chat_id"] for row in users})
 
+    if selected_mode == "morning":
+        message = morning_text(day)
+        for chat_id in chats:
+            # Keep the morning announcement useful even when everybody has already submitted.
+            send_telegram(chat_id, message)
+        return
+
     for chat_id in chats:
-        if selected_mode == "morning":
-            morning_concept = ai.get("morning_concept", "")
-            morning_explanation = ai.get("morning_concept_explanation", "")
-            if ai.get("next_day") == day:
-                morning_concept = ai.get("next_morning_concept", morning_concept)
-                morning_explanation = ai.get("next_morning_concept_explanation", morning_explanation)
-
-            incomplete = [
-                row for row in users
-                if row["chat_id"] == chat_id
-                and (chat_id, row["user_id"]) not in submitted
-            ]
-            if not incomplete:
-                continue
-
-            mentions = " ".join(
-                mention(row["user_id"], row.get("first_name"), row.get("username"))
-                for row in incomplete
-            )
-            text = (
-                f"🌅 <b>Day {day}/30</b>\n\n"
-                f"🧠 <b>{html.escape(name)}</b>\n{url}\n\n"
-                f"💡 <b>Interview concept: {html.escape(morning_concept)}</b>\n"
-                f"{html.escape(morning_explanation)}\n\n"
-                f"👋 {mentions}"
-            )
-        else:
-            if not any(row["chat_id"] == chat_id and row["day"] == day for row in submissions):
-                continue
-            feedback = ai.get("evening_feedback", "").strip()
-            if not feedback:
-                continue
-            text = (
-                f"🌙 <b>Day {day} — Evening takeaway</b>\n\n"
-                f"{html.escape(feedback)}"
-            )
-
-        send_telegram(chat_id, text)
+        message = evening_text(day, entries, users, chat_id)
+        send_telegram(chat_id, message)
 
 if __name__ == "__main__":
     main()
