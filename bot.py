@@ -632,6 +632,11 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ]
             message.extend(["", f"🥇 Today’s joint winners: {', '.join(displays)} — {max_points} pts"])
 
+    if overall_rows and overall_rows[0][2] > 0:
+        first_name, username, solved, points = overall_rows[0]
+        display = f"@{username}" if username else first_name
+        message.extend(["", f"👑 Overall leader: {display} — {points} pts / {solved} unique questions"])
+
     await update.effective_message.reply_text("\n".join(message))
 
 
