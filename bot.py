@@ -451,8 +451,8 @@ def main():
     app.run_webhook(
         listen="0.0.0.0",
         port=PORT,
-        url_path=TOKEN,
-        webhook_url=f"https://{RENDER_EXTERNAL_URL.rstrip('/').removeprefix('https://').removeprefix('http://')}/{TOKEN}",
+        url_path="telegram",
+        webhook_url=f"https://{RENDER_EXTERNAL_URL.rstrip('/').removeprefix('https://').removeprefix('http://')}/telegram",
         drop_pending_updates=True,
     )
 
