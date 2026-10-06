@@ -92,11 +92,13 @@ def db():
     return conn
 
 
-def github_request(method, path, payload=None):
+def github_request(method, path, payload=None, query=None):
     if not GITHUB_TOKEN:
         return None
 
     url = f"https://api.github.com/repos/{GITHUB_BACKUP_REPO}/contents/{quote(path, safe='/')}"
+    if query:
+        url += "?" + query
     headers = {
         "Accept": "application/vnd.github+json",
         "Authorization": f"Bearer {GITHUB_TOKEN}",
@@ -165,7 +167,8 @@ def backup_to_github():
 
     existing = github_request(
         "GET",
-        f"{GITHUB_BACKUP_PATH}?ref={quote(GITHUB_BACKUP_BRANCH, safe='')}",
+        GITHUB_BACKUP_PATH,
+        query=f"ref={quote(GITHUB_BACKUP_BRANCH, safe='')}",
     )
 
     payload = {
@@ -200,7 +203,8 @@ def restore_from_github():
 
     result = github_request(
         "GET",
-        f"{GITHUB_BACKUP_PATH}?ref={quote(GITHUB_BACKUP_BRANCH, safe='')}",
+        GITHUB_BACKUP_PATH,
+        query=f"ref={quote(GITHUB_BACKUP_BRANCH, safe='')}",
     )
     if not result or not result.get("content"):
         return False
