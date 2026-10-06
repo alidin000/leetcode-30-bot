@@ -108,6 +108,12 @@ def main():
 
     for chat_id in chats:
         if selected_mode == "morning":
+            morning_concept = ai.get("morning_concept", "")
+            morning_explanation = ai.get("morning_concept_explanation", "")
+            if ai.get("next_day") == day:
+                morning_concept = ai.get("next_morning_concept", morning_concept)
+                morning_explanation = ai.get("next_morning_concept_explanation", morning_explanation)
+
             incomplete = [
                 row for row in users
                 if row["chat_id"] == chat_id
@@ -123,8 +129,8 @@ def main():
             text = (
                 f"🌅 <b>Day {day}/30</b>\n\n"
                 f"🧠 <b>{html.escape(name)}</b>\n{url}\n\n"
-                f"💡 <b>Interview concept: {html.escape(ai.get('morning_concept', ''))}</b>\n"
-                f"{html.escape(ai.get('morning_concept_explanation', ''))}\n\n"
+                f"💡 <b>Interview concept: {html.escape(morning_concept)}</b>\n"
+                f"{html.escape(morning_explanation)}\n\n"
                 f"👋 {mentions}"
             )
         else:
