@@ -67,130 +67,68 @@ jobs:
           with open("ai/daily_content.json", encoding="utf-8") as f:
               content = json.load(f)
 
-          def esc(value):
-              return html.escape(str(value).strip(), quote=False)
-
-          def extract_sections(raw):
+          def format_content(raw, drop_first_heading=None):
+              """Preserve the AI-written mini-lesson; only apply Telegram-safe styling."""
               text = str(raw).strip()
-              sections = {}
-              aliases = {
-                  "bottom line": "bottom line",
-                  "company / round": "company / round",
-                  "what candidates reported": "what candidates reported",
-                  "the hidden difficulty": "the hidden difficulty",
-                  "signal": "signal",
-                  "what happened next": "what happened next",
-                  "what they are really testing": "what they are really testing",
-                  "best way to prepare": "best way to prepare",
-                  "interviewer lens": "interviewer lens",
-                  "what repeats": "what repeats",
-                  "what the interview felt like": "what the interview felt like",
-                  "follow-up pattern": "follow-up pattern",
-                  "company-specific signal": "company-specific signal",
-                  "evidence caveat": "evidence caveat",
-                  "what to do with this": "what to do with this",
-              }
 
-              # The AI may prefix headings with emojis and may put a heading
-              # on its own line or at the start of a paragraph. Normalize both.
-              heading_re = re.compile(
-                  r"^[^A-Za-z0-9\n]*([^:]{2,60}):\s*(.*)$"
-              )
+              if drop_first_heading:
+                  lines = text.splitlines()
+                  if lines and lines[0].strip().lower() == drop_first_heading.lower():
+                      text = "\n".join(lines[1:]).strip()
 
-              current = None
-              for paragraph in re.split(r"\n\s*\n", text):
-                  paragraph = paragraph.strip()
-                  if not paragraph:
-                      continue
+              # Escape first so AI text cannot accidentally create Telegram HTML.
+              text = html.escape(text, quote=False)
 
-                  lines = paragraph.splitlines()
-                  first = lines[0].strip()
-                  match = heading_re.match(first)
-
-                  if match:
-                      heading = match.group(1).strip().lower()
-                      heading = re.sub(r"^[^a-zA-Z]+", "", heading)
-                      heading = re.sub(r"\\s+$", "", heading)
-                      key = aliases.get(heading)
-                      if key:
-                          value = match.group(2).strip()
-                          if len(lines) > 1:
-                              value = (value + " " + " ".join(x.strip() for x in lines[1:])).strip()
-                          current = key
-                          sections[key] = value
-                          continue
-
-                  if current:
-                      sections[current] = (sections[current] + " " + paragraph).strip()
-
-              return sections
-
-          def take_first_sentence(text, max_chars=300):
-              text = str(text).strip()
-              if len(text) <= max_chars:
-                  return text
-              m = re.search(r"(?<=[.!?])\s", text[max_chars - 80:max_chars + 80])
-              if m:
-                  end = max_chars - 80 + m.start() + 1
-                  return text[:end].strip()
-              return text[:max_chars].rstrip() + "…"
-
-          def source_links(raw, label="Sources"):
-              parts = str(raw).split("🔎 Sources:", 1)
-              if len(parts) != 2:
-                  return ""
-              urls = re.findall(r"https?://[^\s·]+", parts[1])
-              if not urls:
-                  return ""
-              links = [
-                  f'<a href="{html.escape(url, quote=True)}">Source {i}</a>'
-                  for i, url in enumerate(urls[:3], 1)
+              # Make the lesson's known section headings stand out.
+              headings = [
+                  "🎯 The idea",
+                  "🔧 How it works",
+                  "🧪 A real example",
+                  "⚖️ Trade-offs",
+                  "🧩 The subtle part: composite indexes",
+                  "💥 What can go wrong?",
+                  "🏗 Where you see it",
+                  "🎤 Interview connection",
+                  "🔎 Sources",
+                  "🎯 Bottom line",
+                  "📊 What to watch for",
+                  "📚 What to do with this",
+                  "⚠️ Evidence caveat",
               ]
-              return f"<b>🔗 {label}</b>  " + " · ".join(links)
+              for heading in headings:
+                  safe = html.escape(heading, quote=False)
+                  text = text.replace(safe, f"<b>{safe}</b>")
+
+              # Turn every URL into a clickable link, while disabling previews below.
+              def link_url(match):
+                  url = match.group(0).rstrip(".,)")
+                  return f'<a href="{html.escape(url, quote=True)}">{html.escape(url, quote=False)}</a>'
+
+              text = re.sub(r"https?://[^\s<>]+", link_url, text)
+              text = re.sub(r"\n{4,}", "\n\n", text)
+              return text.strip()
 
           def morning_message(test=False):
-              sections = extract_sections(content["morning_concept_explanation"])
-              # Keep the message intentionally compact for a phone screen.
-              question = sections.get("what candidates reported", "")
-              reported = sections.get("signal", "")
-              followups = sections.get("what happened next", "")
-              tests = sections.get("what they are really testing", "")
-              prepare = sections.get("best way to prepare", "")
-              evidence = sections.get("interviewer lens", "")
-
-              title = "🧪 <b>Interview Intel</b>" if test else f"🌅 <b>Day {content['day']} · Interview Intel</b>"
-              blocks = [
-                  f"💼 <b>{esc(content['morning_concept'].replace('🎯 ', ''))}</b>",
-                  f"<b>🎯 The interview</b>\n{esc(take_first_sentence(question, 360))}",
-                  f"<b>📡 Signal</b>\n{esc(take_first_sentence(reported, 260))}",
-                  f"<b>🔎 Follow-ups</b>\n{esc(take_first_sentence(followups, 300))}",
-                  f"<b>🧠 They test</b>\n{esc(take_first_sentence(tests, 280))}",
-                  f"<b>🧭 Prepare</b>\n{esc(take_first_sentence(prepare, 300))}",
-                  f"<b>🧾 Read it as</b>\n{esc(take_first_sentence(evidence, 220))}",
-              ]
-              sources = source_links(content["morning_concept_explanation"])
-              return title + "\n\n" + "\n\n".join(blocks) + (f"\n\n{sources}" if sources else "")
+              title = (
+                  "🧪 <b>Interview Intel</b>"
+                  if test
+                  else f"🌅 <b>Day {content['day']} · Interview Intel</b>"
+              )
+              concept = html.escape(str(content["morning_concept"]).strip(), quote=False)
+              body = format_content(content["morning_concept_explanation"])
+              return f"{title}\n\n<b>{concept}</b>\n\n{body}"
 
           def evening_message(test=False):
-              sections = extract_sections(content["evening_feedback"])
-              repeated = sections.get("what repeats", "")
-              experience = sections.get("what the interview felt like", "")
-              followups = sections.get("follow-up pattern", "")
-              company = sections.get("company-specific signal", "")
-              caveat = sections.get("evidence caveat", "")
-              todo = sections.get("what to do with this", "")
-
-              title = "🧪 <b>Candidate Feedback</b>" if test else f"🌙 <b>Day {content['day']} · Candidate Feedback</b>"
-              blocks = [
-                  f"<b>📈 Repeated signal</b>\n{esc(take_first_sentence(repeated, 320))}",
-                  f"<b>👤 Candidate experience</b>\n{esc(take_first_sentence(experience, 300))}",
-                  f"<b>⚠️ Watch for</b>\n{esc(take_first_sentence(followups, 280))}",
-                  f"<b>🏢 Company signal</b>\n{esc(take_first_sentence(company, 280))}",
-                  f"<b>🧾 Evidence quality</b>\n{esc(take_first_sentence(caveat, 260))}",
-                  f"<b>📚 Do this</b>\n{esc(take_first_sentence(todo, 280))}",
-              ]
-              sources = source_links(content["evening_feedback"])
-              return title + "\n\n" + "\n\n".join(blocks) + (f"\n\n{sources}" if sources else "")
+              title = (
+                  "🧪 <b>Candidate Feedback</b>"
+                  if test
+                  else f"🌙 <b>Day {content['day']} · Candidate Feedback</b>"
+              )
+              body = format_content(
+                  content["evening_feedback"],
+                  drop_first_heading="🌙 Candidate Feedback",
+              )
+              return f"{title}\n\n{body}"
 
           now = datetime.now(ZoneInfo("Europe/Budapest"))
           hour = now.hour
