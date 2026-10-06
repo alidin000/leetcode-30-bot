@@ -256,14 +256,6 @@ def restore_from_github():
         logging.warning("GITHUB_TOKEN is not configured; restore skipped.")
         return False
 
-    conn = db()
-    users_count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
-    submissions_count = conn.execute("SELECT COUNT(*) FROM submissions").fetchone()[0]
-    conn.close()
-
-    if users_count or submissions_count:
-        return False
-
     result = github_request(
         "GET",
         GITHUB_BACKUP_PATH,
@@ -561,47 +553,84 @@ async def progress(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.effective_message.reply_text("\n".join(message))
 
 
+def leaderboard_rows(chat_id, day=None):
+    conn = db()
+    if day is None:
+        rows = conn.execute("""
+            SELECT u.first_name, u.username,
+                   COUNT(s.id) AS solved,
+                   COALESCE(SUM(s.points), 0) AS points
+            FROM users u
+            LEFT JOIN competition_submissions s
+              ON s.chat_id=u.chat_id AND s.user_id=u.user_id
+            WHERE u.chat_id=?
+            GROUP BY u.user_id
+            ORDER BY points DESC, solved DESC, u.first_name ASC
+        """, (chat_id,)).fetchall()
+    else:
+        rows = conn.execute("""
+            SELECT u.first_name, u.username,
+                   COUNT(s.id) AS solved,
+                   COALESCE(SUM(s.points), 0) AS points
+            FROM users u
+            LEFT JOIN competition_submissions s
+              ON s.chat_id=u.chat_id AND s.user_id=u.user_id AND s.day=?
+            WHERE u.chat_id=?
+            GROUP BY u.user_id
+            ORDER BY points DESC, solved DESC, u.first_name ASC
+        """, (day, chat_id)).fetchall()
+    conn.close()
+    return rows
+
+
+def leaderboard_section(title, rows):
+    lines = [title]
+    for index, (first_name, username, solved, points) in enumerate(rows, 1):
+        display = f"@{username}" if username else first_name
+        lines.append(
+            f"{index}. {display} — {solved} question{'s' if solved != 1 else ''} · {points} pts"
+        )
+    if not rows:
+        lines.append("No participants yet.")
+    return lines
+
+
 async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(update)
     chat_id = update.effective_chat.id
     day = current_day()
-    conn = db()
-    rows = conn.execute("""
-        SELECT u.first_name, u.username,
-               COUNT(s.id) AS solved,
-               COALESCE(SUM(s.points), 0) AS points
-        FROM users u
-        LEFT JOIN competition_submissions s
-          ON s.chat_id=u.chat_id AND s.user_id=u.user_id AND s.day=?
-        WHERE u.chat_id=?
-        GROUP BY u.user_id
-        ORDER BY points DESC, solved DESC, u.first_name ASC
-    """, (day, chat_id)).fetchall()
-    conn.close()
 
-    message = [f"🏆 Daily leaderboard — Day {day}/30", ""]
-    for index, (first_name, username, solved, points) in enumerate(rows, 1):
-        display = f"@{username}" if username else first_name
-        message.append(f"{index}. {display} — {solved} questions · {points} pts")
+    daily_rows = leaderboard_rows(chat_id, day)
+    overall_rows = leaderboard_rows(chat_id)
 
-    if rows:
-        max_points = rows[0][3]
-        max_solved = rows[0][2]
+    message = [
+        f"🏆 Leaderboard — Day {day}/30",
+        "",
+        *leaderboard_section("📅 TODAY", daily_rows),
+        "",
+        *leaderboard_section("🏆 OVERALL", overall_rows),
+    ]
+
+    if daily_rows:
+        max_points = daily_rows[0][3]
+        max_solved = daily_rows[0][2]
         winners = [
             (first_name, username)
-            for first_name, username, solved, points in rows
+            for first_name, username, solved, points in daily_rows
             if points == max_points and solved == max_solved
         ]
-        if len(winners) == 1:
+        if max_solved == 0:
+            message.extend(["", "🤝 No winner today — nobody submitted a counted problem."])
+        elif len(winners) == 1:
             first_name, username = winners[0]
             display = f"@{username}" if username else first_name
-            message.extend(["", f"🏆 Winner: {display} — {max_points} pts"])
+            message.extend(["", f"🥇 Today’s winner: {display} — {max_points} pts"])
         else:
             displays = [
                 f"@{username}" if username else first_name
                 for first_name, username in winners
             ]
-            message.extend(["", f"🏆 Joint winners: {', '.join(displays)} — {max_points} pts"])
+            message.extend(["", f"🥇 Today’s joint winners: {', '.join(displays)} — {max_points} pts"])
 
     await update.effective_message.reply_text("\n".join(message))
 
@@ -945,7 +974,7 @@ async def daily_reminder(context: ContextTypes.DEFAULT_TYPE):
             )
         except Exception:
             logging.exception("Failed to send reminder to %s", chat_id)
-
+\n    # Keep GitHub as the durable copy of the live SQLite state.\n    await asyncio.to_thread(backup_to_github)\n
 
 async def test_tag(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(update)
@@ -973,8 +1002,9 @@ async def test_tag(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     logging.basicConfig(level=logging.INFO)
     db()
-    restore_from_github()
+    # Merge the durable GitHub backup into the local SQLite database on every startup.\n    # This also recovers after Render recreates the service filesystem.\n    restore_from_github()
     backfill_competition_submissions()
+    # Re-publish the merged state so the backup remains the durable source of truth.\n    backup_to_github()
     app = Application.builder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
