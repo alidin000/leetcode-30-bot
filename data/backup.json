@@ -1,12 +1,18 @@
 {
   "version": 1,
-  "updated_at": "2026-10-06T05:44:12.789521+00:00",
+  "updated_at": "2026-10-06T08:33:42.423658+00:00",
   "users": [
     {
       "chat_id": -5554078333,
       "user_id": 891132706,
       "username": "alidinn",
       "first_name": "Alidin"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "username": "Emiliyagv",
+      "first_name": "Emiliya"
     }
   ],
   "submissions": [
@@ -16,6 +22,13 @@
       "day": 1,
       "url": "https://leetcode.com/problems/set-mismatch/submissions/2163863137/?envType=problem-list-v2&envId=dsa-linear-shoal-array-ii",
       "submitted_at": "2026-10-06T05:44:12.781210+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 1,
+      "url": "https://leetcode.com/submissions/detail/2164018840/",
+      "submitted_at": "2026-10-06T08:33:42.418931+00:00"
     }
   ]
 }
