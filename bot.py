@@ -175,7 +175,7 @@ def backup_to_github():
         return False
 
     conn = db()
-    users = [
+    current_users = [
         {
             "chat_id": row[0],
             "user_id": row[1],
@@ -186,7 +186,7 @@ def backup_to_github():
             "SELECT chat_id, user_id, username, first_name FROM users"
         ).fetchall()
     ]
-    submissions = [
+    current_submissions = [
         {
             "chat_id": row[0],
             "user_id": row[1],
@@ -198,7 +198,7 @@ def backup_to_github():
             "SELECT chat_id, user_id, day, url, submitted_at FROM submissions"
         ).fetchall()
     ]
-    competition_submissions = [
+    current_competition_submissions = [
         {
             "chat_id": row[0],
             "user_id": row[1],
@@ -217,40 +217,79 @@ def backup_to_github():
     ]
     conn.close()
 
-    backup = {
-        "version": 2,
-        "updated_at": datetime.now(timezone.utc).isoformat(),
-        "users": users,
-        "submissions": submissions,
-        "competition_submissions": competition_submissions,
-    }
-    content = base64.b64encode(
-        (json.dumps(backup, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
-    ).decode("ascii")
-
     existing = github_request(
         "GET",
         GITHUB_BACKUP_PATH,
         query=f"ref={quote(GITHUB_BACKUP_BRANCH, safe='')}",
     )
+    if not existing or not existing.get("sha") or not existing.get("content"):
+        # Never replace a potentially healthy remote backup with a possibly
+        # empty/incomplete local SQLite database.
+        logging.error("Remote GitHub backup could not be read; refusing to overwrite it.")
+        return False
+
+    try:
+        remote_backup = json.loads(
+            base64.b64decode(existing["content"]).decode("utf-8")
+        )
+    except (ValueError, UnicodeDecodeError, KeyError):
+        logging.exception("Remote GitHub backup is invalid; refusing to overwrite it.")
+        return False
+
+    def merge_records(existing_rows, current_rows, key_fields):
+        merged = {}
+        for row in existing_rows or []:
+            key = tuple(row.get(field) for field in key_fields)
+            merged[key] = row
+        for row in current_rows:
+            key = tuple(row.get(field) for field in key_fields)
+            merged[key] = row
+        return list(merged.values())
+
+    backup = {
+        "version": max(2, int(remote_backup.get("version", 1) or 1)),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "users": merge_records(
+            remote_backup.get("users", []),
+            current_users,
+            ("chat_id", "user_id"),
+        ),
+        "submissions": merge_records(
+            remote_backup.get("submissions", []),
+            current_submissions,
+            ("chat_id", "user_id", "day"),
+        ),
+        "competition_submissions": merge_records(
+            remote_backup.get("competition_submissions", []),
+            current_competition_submissions,
+            ("chat_id", "user_id", "problem_slug"),
+        ),
+    }
+
+    content = base64.b64encode(
+        (json.dumps(backup, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+    ).decode("ascii")
 
     payload = {
         "message": "Update challenge data backup",
         "content": content,
         "branch": GITHUB_BACKUP_BRANCH,
+        "sha": existing["sha"],
     }
-    if existing and existing.get("sha"):
-        payload["sha"] = existing["sha"]
 
     result = github_request("PUT", GITHUB_BACKUP_PATH, payload)
     if result:
-        logging.info("Challenge data backed up to GitHub.")
+        logging.info(
+            "Challenge data backed up to GitHub: %s users, %s legacy submissions, "
+            "%s competition submissions.",
+            len(backup["users"]),
+            len(backup["submissions"]),
+            len(backup["competition_submissions"]),
+        )
         return True
 
     logging.error("Challenge data backup failed.")
     return False
-
-
 def restore_from_github():
     if not GITHUB_TOKEN:
         logging.warning("GITHUB_TOKEN is not configured; restore skipped.")
