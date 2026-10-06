@@ -1,0 +1,39 @@
+name: Telegram Scheduled Challenge
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+      timezone: "Europe/Budapest"
+    - cron: "15 19 * * *"
+      timezone: "Europe/Budapest"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Message to send"
+        required: true
+        default: "morning"
+        type: choice
+        options:
+          - morning
+          - evening
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Fetch challenge data backup
+        run: git fetch origin data-backup:data-backup --depth=1
+
+      - name: Send Telegram message
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          SCHEDULE: ${{ github.event.schedule }}
+          MANUAL_MODE: ${{ inputs.mode }}
+        run: python scripts/send_scheduled_message.py
