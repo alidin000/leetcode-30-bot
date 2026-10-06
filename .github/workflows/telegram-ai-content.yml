@@ -203,38 +203,6 @@ jobs:
               )
               return f"{title}\n\n{body}"
 
-          def split_message(text, limit=3900):
-              """Split at paragraph boundaries so Telegram never exceeds its limit."""
-              if len(text) <= limit:
-                  return [text]
-
-              paragraphs = text.split("\n\n")
-              chunks = []
-              current = ""
-
-              for paragraph in paragraphs:
-                  candidate = paragraph if not current else current + "\n\n" + paragraph
-                  if len(candidate) <= limit:
-                      current = candidate
-                  else:
-                      if current:
-                          chunks.append(current)
-                      # A single paragraph can still be large; split it safely.
-                      while len(paragraph) > limit:
-                          cut = paragraph.rfind("\n", 0, limit)
-                          if cut < 1000:
-                              cut = paragraph.rfind(" ", 0, limit)
-                          if cut < 1:
-                              cut = limit
-                          chunks.append(paragraph[:cut].rstrip())
-                          paragraph = paragraph[cut:].lstrip()
-                      current = paragraph
-
-              if current:
-                  chunks.append(current)
-
-              return chunks
-
           def telegram_messages():
               test_message = os.environ.get("TEST_MESSAGE", "").lower() == "true"
 
