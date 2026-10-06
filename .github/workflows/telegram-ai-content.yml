@@ -67,73 +67,108 @@ jobs:
           with open("ai/daily_content.json", encoding="utf-8") as f:
               content = json.load(f)
 
-          def format_ai_text(text):
-              """Turn AI prose into compact, readable Telegram HTML."""
-              text = html.escape(str(text).strip())
+          def extract_urls(text):
+              return re.findall(r"https?://[^\s<>|]+", str(text))
 
-              # Make the common labels visually scannable.
-              labels = [
-                  "Candidate feedback:",
-                  "Sources:",
-                  "Likely follow-ups:",
-                  "What it tests:",
-                  "One-off example:",
+          def clean_url(url):
+              return url.rstrip(".,;)")
+
+          def source_keyboard(text):
+              urls = []
+              for url in extract_urls(text):
+                  url = clean_url(url)
+                  if url not in urls:
+                      urls.append(url)
+              buttons = [
+                  [{"text": f"🔗 Source {i}", "url": url}]
+                  for i, url in enumerate(urls[:4], 1)
               ]
-              for label in labels:
-                  text = text.replace(
-                      label,
-                      f"\n\n<b>{label}</b>"
-                  )
+              return {"inline_keyboard": buttons} if buttons else None
 
-              # Put each source on its own compact line and hide long URLs.
-              url_pattern = r"https?://[^\s<>]+"
-              source_index = 0
+          def format_ai_text(raw):
+              text = str(raw).strip()
+              source_urls = []
+              for url in extract_urls(text):
+                  url = clean_url(url)
+                  if url not in source_urls:
+                      source_urls.append(url)
 
-              def link(match):
-                  nonlocal source_index
-                  source_index += 1
-                  url = match.group(0).rstrip(".,)")
-                  return f'<a href="{url}">Source {source_index}</a>'
+              text = re.sub(r"https?://[^\s<>|]+", "", text)
+              text = html.escape(text)
 
-              text = re.sub(url_pattern, link, text)
+              lines = [line.strip() for line in text.splitlines()]
+              out = []
 
-              # Clean up excessive blank lines while preserving section breaks.
-              text = re.sub(r"\n{3,}", "\n\n", text)
-              return text.strip()
+              for line in lines:
+                  if not line:
+                      if out and out[-1] != "":
+                          out.append("")
+                      continue
 
-          def morning_message(test=False):
-              prefix = "🧪 <b>Interview Intel Test</b>" if test else f"🌅 <b>Day {content['day']} — Interview Intel</b>"
-              return (
-                  f"{prefix}\n\n"
-                  f"💼 <b>{html.escape(content['morning_concept'])}</b>\n\n"
-                  f"{format_ai_text(content['morning_concept_explanation'])}"
+                  if line.startswith("Question:"):
+                      value = line[len("Question:"):].strip()
+                      out.append(f"🎯 <b>Question</b>\n<blockquote>{value}</blockquote>")
+                  elif line.startswith("Reported signal:"):
+                      value = line[len("Reported signal:"):].strip()
+                      out.append(f"📡 <b>Reported signal</b>\n{value}")
+                  elif line.startswith("Follow-ups:"):
+                      value = line[len("Follow-ups:"):].strip()
+                      items = [x.strip() for x in value.split(" • ") if x.strip()]
+                      out.append("🔎 <b>Likely follow-ups</b>\n" + "\n".join(f"• {x}" for x in items))
+                  elif line.startswith("What it tests:"):
+                      value = line[len("What it tests:"):].strip()
+                      out.append(f"🧠 <b>What it tests</b>\n{value}")
+                  elif line.startswith("Evidence:"):
+                      value = line[len("Evidence:"):].strip()
+                      out.append(f"⚖️ <b>Evidence</b>\n<i>{value}</i>")
+                  elif line.startswith("Repeated signal:"):
+                      value = line[len("Repeated signal:"):].strip()
+                      out.append(f"📈 <b>Repeated signal</b>\n{value}")
+                  elif line.startswith("Candidate experience:"):
+                      value = line[len("Candidate experience:"):].strip()
+                      out.append(f"🗣 <b>Candidate experience</b>\n{value}")
+                  elif line.startswith("Watch for:"):
+                      value = line[len("Watch for:"):].strip()
+                      items = [x.strip() for x in value.split(" • ") if x.strip()]
+                      out.append("⚠️ <b>Watch for</b>\n" + "\n".join(f"• {x}" for x in items))
+                  elif line.startswith("Evidence quality:"):
+                      value = line[len("Evidence quality:"):].strip()
+                      out.append(f"⚖️ <b>Evidence quality</b>\n<i>{value}</i>")
+                  elif line.startswith("Sources:"):
+                      continue
+                  else:
+                      out.append(line)
+
+              while out and out[-1] == "":
+                  out.pop()
+
+              return "\n\n".join(out), source_urls
+
+          def build_message(title, body, emoji):
+              formatted, urls = format_ai_text(body)
+              message = (
+                  f"{emoji} <b>{html.escape(title)}</b>\n"
+                  f"<i>Interview intelligence • Day {content['day']}</i>\n\n"
+                  f"{formatted}"
               )
+              return message, urls
 
-          def evening_message(test=False):
-              prefix = "🌙 <b>Candidate Feedback Test</b>" if test else f"🌙 <b>Day {content['day']} — Candidate Feedback</b>"
-              return (
-                  f"{prefix}\n\n"
-                  f"{format_ai_text(content['evening_feedback'])}"
-              )
+          morning_message, morning_urls = build_message(
+              content["morning_concept"],
+              content["morning_concept_explanation"],
+              "💼",
+          )
+
+          evening_message, evening_urls = build_message(
+              "Candidate feedback",
+              content["evening_feedback"],
+              "🌙",
+          )
 
           now = datetime.now(ZoneInfo("Europe/Budapest"))
           hour = now.hour
           today = now.date().isoformat()
           test_message = os.environ.get("TEST_MESSAGE", "").lower() == "true"
-
-          if test_message:
-              message = (
-                  f"{morning_message(test=True)}\n\n"
-                  f"{'━' * 24}\n\n"
-                  f"{evening_message(test=True)}"
-              )
-          elif hour == 9:
-              message = morning_message()
-          elif hour == 19:
-              message = evening_message()
-          else:
-              print(f"No AI message scheduled for local time {now.isoformat()}.")
-              raise SystemExit(0)
 
           if not test_message and content.get("date") != today:
               print(
@@ -144,15 +179,23 @@ jobs:
 
           url = f"https://api.telegram.org/bot{token}/sendMessage"
 
-          for chat_id in chat_ids:
-              payload = urllib.parse.urlencode({
+          def send_message(chat_id, message, source_urls):
+              payload = {
                   "chat_id": chat_id,
                   "text": message,
                   "parse_mode": "HTML",
                   "disable_web_page_preview": "true",
-              }).encode()
+              }
+              if source_urls:
+                  payload["reply_markup"] = json.dumps({
+                      "inline_keyboard": [
+                          [{"text": f"🔗 Source {i}", "url": source}]
+                          for i, source in enumerate(source_urls[:4], 1)
+                      ]
+                  })
 
-              request = urllib.request.Request(url, data=payload, method="POST")
+              encoded = urllib.parse.urlencode(payload).encode()
+              request = urllib.request.Request(url, data=encoded, method="POST")
               with urllib.request.urlopen(request) as response:
                   result = json.loads(response.read().decode())
 
@@ -160,6 +203,28 @@ jobs:
                   raise SystemExit(
                       f"Telegram API failed for chat {chat_id}: {result}"
                   )
+
+          for chat_id in chat_ids:
+              if test_message:
+                  test_morning, _ = build_message(
+                      content["morning_concept"],
+                      content["morning_concept_explanation"],
+                      "🧪",
+                  )
+                  test_evening, _ = build_message(
+                      "Candidate feedback",
+                      content["evening_feedback"],
+                      "🧪",
+                  )
+                  send_message(chat_id, test_morning, morning_urls)
+                  send_message(chat_id, test_evening, evening_urls)
+              elif hour == 9:
+                  send_message(chat_id, morning_message, morning_urls)
+              elif hour == 19:
+                  send_message(chat_id, evening_message, evening_urls)
+              else:
+                  print(f"No AI message scheduled for local time {now.isoformat()}.")
+                  raise SystemExit(0)
 
               print(f"Sent AI content to {chat_id}.")
           PY
