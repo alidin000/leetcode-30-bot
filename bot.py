@@ -706,7 +706,7 @@ async def finish_submission(update, problem_title, difficulty, points, pending):
         await update.callback_query.edit_message_text(text)
 
 
-async def record_submission(update: Update, url: str):
+async def record_submission(update: Update, url: str, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
     day = current_day()
@@ -876,7 +876,7 @@ async def submit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not match:
         await update.effective_message.reply_text("❌ That doesn't look like a LeetCode submission link.")
         return
-    await record_submission(update, match.group(0))
+    await record_submission(update, match.group(0), context)
 
 
 async def submission(update: Update, context: ContextTypes.DEFAULT_TYPE):
