@@ -368,6 +368,20 @@ def restore_from_github():
     return True
 
 
+def restore_with_retries(attempts=3):
+    for attempt in range(1, attempts + 1):
+        if restore_from_github():
+            logging.info("GitHub restore succeeded on attempt %s/%s.", attempt, attempts)
+            return True
+        logging.warning("GitHub restore attempt %s/%s failed.", attempt, attempts)
+    logging.error("GitHub restore failed after %s attempts.", attempts)
+    return False
+
+
+async def ensure_restored():
+    await asyncio.to_thread(restore_with_retries)
+
+
 def register_user(update):
     chat = update.effective_chat
     user = update.effective_user
@@ -557,6 +571,7 @@ async def random_problem(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def progress(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await ensure_restored()
     register_user(update)
     chat_id = update.effective_chat.id
     day = current_day()
@@ -635,6 +650,7 @@ def leaderboard_section(title, rows):
 
 
 async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await ensure_restored()
     register_user(update)
     chat_id = update.effective_chat.id
     day = current_day()
@@ -1049,9 +1065,18 @@ async def test_tag(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     logging.basicConfig(level=logging.INFO)
     db()
-    # Merge the durable GitHub backup into the local SQLite database on every startup.\n    # This also recovers after Render recreates the service filesystem.\n    restore_from_github()
-    backfill_competition_submissions()
-    # Re-publish the merged state so the backup remains the durable source of truth.\n    backup_to_github()
+
+    restored = restore_with_retries()
+    if restored:
+        backfill_competition_submissions()
+        # Only back up after a successful restore. This prevents an empty or
+        # incomplete local database from replacing the durable GitHub backup.
+        backup_to_github()
+    else:
+        logging.error(
+            "Startup restore failed; preserving GitHub backup and starting with local state only."
+        )
+
     app = Application.builder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
