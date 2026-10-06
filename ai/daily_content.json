@@ -1,8 +1,8 @@
 {
   "day": 1,
   "date": "2026-10-06",
-  "morning_concept": "TEST SUCCESS - GitHub write works",
-  "morning_concept_explanation": "This is a test to verify that the scheduled task can actually write to the connected GitHub repository.",
-  "evening_feedback": "TEST SUCCESS - GitHub write works",
-  "generated_at": "2026-10-06T10:00:00+02:00"
+  "morning_concept": "System design: sharding and choosing a shard key",
+  "morning_concept_explanation": "Sharding means splitting a large dataset across multiple machines so storage and traffic can scale horizontally. The key design decision is the shard key: a value such as user_id that determines where each record lives. A good shard key distributes data evenly, avoids hot shards, supports the application's most common queries, and does not create excessive cross-shard operations. For today's interactive lesson, start with the difference between sharding and replication, then examine user_id-based sharding, hot partitions, rebalancing, and why consistent hashing can help when the number of nodes changes.",
+  "evening_feedback": "Review today's system-design discussion and connect it to interview thinking: explain why sharding is needed, distinguish it from replication, choose a shard key and justify it, then discuss the tradeoffs of hot shards, cross-shard queries, and rebalancing. Your LeetCode tracker currently has no accepted submissions recorded since 2026-10-01, so do not assume new solved problems. Keep Dynamic Programming as the main curriculum; the next DP focus remains deriving the circular-to-linear transformation in House Robber II rather than memorizing the recurrence.",
+  "generated_at": "2026-10-06T10:44:00+02:00"
 }
