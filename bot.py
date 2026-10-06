@@ -1,4 +1,5 @@
 import asyncio
+import html
 import base64
 import json
 import logging
@@ -403,16 +404,85 @@ async def submission(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await record_submission(update, match.group(0))
 
 
+def incomplete_users(chat_id, day):
+    conn = db()
+    rows = conn.execute(
+        """
+        SELECT u.user_id, u.first_name, u.username
+        FROM users u
+        WHERE u.chat_id=?
+          AND NOT EXISTS (
+              SELECT 1
+              FROM submissions s
+              WHERE s.chat_id=u.chat_id
+                AND s.user_id=u.user_id
+                AND s.day=?
+          )
+        ORDER BY u.first_name
+        """,
+        (chat_id, day),
+    ).fetchall()
+    conn.close()
+    return rows
+
+
+def mention_user(user_id, first_name, username):
+    display = f"@{username}" if username else (first_name or "participant")
+    return f'<a href="tg://user?id={user_id}">{html.escape(display)}</a>'
+
+
 async def daily_reminder(context: ContextTypes.DEFAULT_TYPE):
     conn = db()
     chats = [row[0] for row in conn.execute("SELECT DISTINCT chat_id FROM users")]
     conn.close()
-    message = "⏰ Daily LeetCode challenge\n\n" + challenge_message(current_day())
+    day = current_day()
+
     for chat_id in chats:
         try:
-            await context.bot.send_message(chat_id=chat_id, text=message)
+            incomplete = incomplete_users(chat_id, day)
+            if not incomplete:
+                continue
+
+            mentions = " ".join(
+                mention_user(user_id, first_name, username)
+                for user_id, first_name, username in incomplete
+            )
+            message = (
+                "⏰ <b>Daily LeetCode challenge</b>\n\n"
+                + challenge_message(day)
+                + "\n\n👋 Still to submit: "
+                + mentions
+            )
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=message,
+                parse_mode="HTML",
+            )
         except Exception:
             logging.exception("Failed to send reminder to %s", chat_id)
+
+
+async def test_tag(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    register_user(update)
+    chat_id = update.effective_chat.id
+    day = current_day()
+    incomplete = incomplete_users(chat_id, day)
+
+    if not incomplete:
+        await update.effective_message.reply_text(
+            f"🧪 Tag test passed: everyone registered in this chat has submitted Day {day}."
+        )
+        return
+
+    mentions = " ".join(
+        mention_user(user_id, first_name, username)
+        for user_id, first_name, username in incomplete
+    )
+    await update.effective_message.reply_text(
+        f"🧪 <b>Tag test</b> — Day {day}\n\n"
+        f"These participants would be tagged by the reminder:\n{mentions}",
+        parse_mode="HTML",
+    )
 
 
 def main():
@@ -426,6 +496,7 @@ def main():
     app.add_handler(CommandHandler("random", random_problem))
     app.add_handler(CommandHandler("submit", submit_command))
     app.add_handler(CommandHandler("backup", backup_command))
+    app.add_handler(CommandHandler("testtag", test_tag))
     app.add_handler(CommandHandler("progress", progress))
     app.add_handler(CommandHandler("leaderboard", leaderboard))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, submission))
