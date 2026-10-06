@@ -169,9 +169,9 @@ jobs:
 
           if test_message:
               message = (
-                  morning_message(test)
+                  morning_message(test=True)
                   + "\n\n━━━━━━━━━━━━━━━━\n\n"
-                  + evening_message(test)
+                  + evening_message(test=True)
               )
           elif hour == 9:
               message = morning_message()
