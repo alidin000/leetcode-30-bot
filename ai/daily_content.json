@@ -1,0 +1,8 @@
+{
+  "day": 1,
+  "date": "2026-10-06",
+  "morning_concept": "State and transitions in dynamic programming",
+  "morning_concept_explanation": "In DP, define what each state means and what information you need from previous states. Then write the transition that moves from those states to the current one.",
+  "evening_feedback": "Challenge content is ready. Once submissions are available, the evening feedback will focus on your approach, complexity, and useful interview takeaways.",
+  "generated_at": "2026-10-06T10:00:00+02:00"
+}
