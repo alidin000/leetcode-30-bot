@@ -79,7 +79,7 @@ jobs:
               blocks = []
 
               # Protect fenced code blocks before escaping/inline formatting.
-              fence_re = re.compile(r"(?s)\`\`\`[ \\t]*([A-Za-z0-9_+.-]+)?[ \\t]*\\n?(.*?)\`\`\`[ \\t]*$")
+              fence_re = re.compile(r"(?s)\`\`\`[ \\t]*([A-Za-z0-9_+.-]+)?[ \\t]*\\n?(.*?)\`\`\`[ \\t]*")
               def save_code(match):
                   language = (match.group(1) or "").strip().lower()
                   value = match.group(2).strip("\\n")
