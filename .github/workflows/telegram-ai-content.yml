@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: "5 * * * *"
   workflow_dispatch:
+    inputs:
+      test_message:
+        description: "Send the AI content immediately for testing"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -20,6 +26,7 @@ jobs:
       - name: Send scheduled Telegram content
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TEST_MESSAGE: ${{ inputs.test_message }}
         run: |
           python - <<'PY'
           import json
@@ -61,8 +68,16 @@ jobs:
           now = datetime.now(ZoneInfo("Europe/Budapest"))
           hour = now.hour
           today = now.date().isoformat()
+          test_message = os.environ.get("TEST_MESSAGE", "").lower() == "true"
 
-          if hour == 9:
+          if test_message:
+              message = (
+                  f"🧪 <b>AI Content Test — Day {content['day']}</b>\n\n"
+                  f"<b>{content['morning_concept']}</b>\n"
+                  f"{content['morning_concept_explanation']}\n\n"
+                  f"🌙 <b>Evening:</b> {content['evening_feedback']}"
+              )
+          elif hour == 9:
               message = (
                   f"🌅 <b>Day {content['day']} — Morning Concept</b>\n\n"
                   f"<b>{content['morning_concept']}</b>\n"
@@ -77,8 +92,7 @@ jobs:
               print(f"No AI message scheduled for local time {now.isoformat()}.")
               raise SystemExit(0)
 
-          # Prevent stale content from being sent.
-          if content.get("date") != today:
+          if not test_message and content.get("date") != today:
               print(
                   f"Skipping: content date {content.get('date')} "
                   f"does not match Budapest date {today}."
