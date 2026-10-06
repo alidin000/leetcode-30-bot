@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "updated_at": "2026-10-06T08:33:42.423658+00:00",
+  "version": 2,
+  "updated_at": "2026-10-06T19:38:03.006064+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -29,6 +29,19 @@
       "day": 1,
       "url": "https://leetcode.com/submissions/detail/2164018840/",
       "submitted_at": "2026-10-06T08:33:42.418931+00:00"
+    }
+  ],
+  "competition_submissions": [
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 1,
+      "problem_slug": "perfect-squares",
+      "problem_title": "Perfect Squares",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/perfect-squares/submissions/2164652067/",
+      "submitted_at": "2026-10-06T19:37:59.591109+00:00"
     }
   ]
 }
