@@ -6,6 +6,10 @@ A small Telegram bot for a 30-day LeetCode challenge.
 
 - Daily challenge reminder
 - Daily LeetCode problem
+- Every unique LeetCode problem submitted counts during the 30-day competition
+- Duplicate problems are rejected and score 0
+- Difficulty scoring: Easy = 1, Medium = 2, Hard = 4
+- Daily points leaderboard and end-of-day winner
 - Submission links recorded from the group
 - Progress and leaderboard
 - SQLite storage
