@@ -1,12 +1,12 @@
 {
   "day": 1,
   "date": "2026-10-06",
-  "morning_concept": "Hashing: why Set and Hash Map solve different lookup problems",
-  "morning_concept_explanation": "Today’s LeetCode challenge is Set Mismatch. Use the challenge itself to teach a transferable interview concept: when you need to quickly test whether a value has appeared before, a hash set gives average O(1) membership checks; when you need to associate a value with extra information, such as its index or count, use a hash map. For Set Mismatch, think about how duplicate detection and missing-value detection can be expressed with a frequency map or a set plus arithmetic, and compare the time and space tradeoffs.",
-  "evening_feedback": "Day 1 challenge status: both Alidin and Emiliya have submitted. Alidin submitted Set Mismatch; Emiliya also submitted a LeetCode submission link. Treat the day as completed for both participants. In the evening, reinforce the core takeaway from Set Mismatch: choose a data structure from the operation you need, especially membership, counting, or value-to-metadata lookup. Ask what an O(n) solution is, what extra space it uses, and whether the arithmetic approach can reduce auxiliary space. Do not claim either participant's exact solution or complexity unless their submitted code is available.",
-  "next_morning_concept": "Arrays: turning a constrained problem into an invariant",
-  "next_morning_concept_explanation": "For Day 2, introduce an array invariant: a property that remains true while the algorithm processes the input. Use the next challenge to connect the invariant to the data structure or algorithm choice, rather than teaching the solution directly.",
-  "next_evening_feedback": "Review Day 2 by asking the participant to state the invariant in one sentence, identify the operation that preserves it, and give the resulting time and space complexity.",
+  "morning_concept": "1D DP: Take vs Skip",
+  "morning_concept_explanation": "Day 1 of the current challenge configuration is House Robber. Use it to teach the transferable idea behind a take-vs-skip recurrence: at each position, either skip the current value or take it together with the best valid result from two positions earlier. Focus on deriving the state and transition instead of memorizing the formula, and compare the O(n) time, O(n) space version with the O(1) space optimization.",
+  "evening_feedback": "Day 1 challenge status: both Alidin and Emiliya have submitted. The available backup contains their submission links, but not their submitted code, so do not claim a specific approach or complexity for either participant. The challenge configuration identifies House Robber as Day 1; use that as the authoritative challenge source. The main takeaway should be recognizing the take-vs-skip decision and being able to derive why the current house conflicts with the previous one.",
+  "next_morning_concept": "Binary trees: BFS and the level-by-level invariant",
+  "next_morning_concept_explanation": "Day 2 of the current challenge configuration is Binary Tree Level Order Traversal. Introduce breadth-first search (BFS) as processing a tree level by level, using a queue and maintaining the invariant that the queue contains the next frontier to process.",
+  "next_evening_feedback": "Review Day 2 by asking the participant to explain why the queue produces level order, how to separate one level from the next, and the resulting time and space complexity.",
   "next_day": 2,
   "generated_at": "2026-10-06T10:44:00+02:00"
 }
