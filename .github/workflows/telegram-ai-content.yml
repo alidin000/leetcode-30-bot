@@ -68,18 +68,15 @@ jobs:
               content = json.load(f)
 
           def format_content(raw, drop_first_heading=None):
-              """Preserve the AI-written mini-lesson; only apply Telegram-safe styling."""
+              """Preserve the AI-written lesson and style headings only."""
               text = str(raw).strip()
-
               if drop_first_heading:
                   lines = text.splitlines()
                   if lines and lines[0].strip().lower() == drop_first_heading.lower():
                       text = "\n".join(lines[1:]).strip()
 
-              # Escape first so AI text cannot accidentally create Telegram HTML.
               text = html.escape(text, quote=False)
 
-              # Make the lesson's known section headings stand out.
               headings = [
                   "🎯 The idea",
                   "🔧 How it works",
@@ -95,14 +92,18 @@ jobs:
                   "📚 What to do with this",
                   "⚠️ Evidence caveat",
               ]
+
               for heading in headings:
                   safe = html.escape(heading, quote=False)
-                  text = text.replace(safe, f"<b>{safe}</b>")
+                  text = text.replace("\n" + safe + "\n", "\n<b>" + safe + "</b>\n")
+                  text = text.replace(safe + "\n", "<b>" + safe + "</b>\n")
 
-              # Turn every URL into a clickable link, while disabling previews below.
               def link_url(match):
                   url = match.group(0).rstrip(".,)")
-                  return f'<a href="{html.escape(url, quote=True)}">{html.escape(url, quote=False)}</a>'
+                  return (
+                      '<a href="' + html.escape(url, quote=True) + '">'
+                      + html.escape(url, quote=False) + '</a>'
+                  )
 
               text = re.sub(r"https?://[^\s<>]+", link_url, text)
               text = re.sub(r"\n{4,}", "\n\n", text)
