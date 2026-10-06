@@ -198,10 +198,12 @@ def build_competition_entries(backup):
 
     return entries
 
-def leaderboard_for_chat(entries, users, chat_id, day):
+def leaderboard_for_chat(entries, users, chat_id, day=None):
     by_user = {}
     for entry in entries:
-        if str(entry["chat_id"]) != str(chat_id) or entry["day"] != day:
+        if str(entry["chat_id"]) != str(chat_id):
+            continue
+        if day is not None and entry["day"] != day:
             continue
         key = entry["user_id"]
         bucket = by_user.setdefault(key, {"questions": 0, "points": 0})
@@ -222,8 +224,15 @@ def leaderboard_for_chat(entries, users, chat_id, day):
             "points": bucket["points"],
         })
 
-    results.sort(key=lambda row: (-row["points"], -row["questions"], (row["first_name"] or "").lower()))
+    results.sort(
+        key=lambda row: (
+            -row["points"],
+            -row["questions"],
+            (row["first_name"] or "").lower(),
+        )
+    )
     return results
+
 
 def morning_text(day):
     name, url = challenge(day)
@@ -240,64 +249,73 @@ def morning_text(day):
         "🏆 At the end of the day, the highest score wins."
     )
 
+
+def render_leaderboard(title, rows, total=False):
+    lines = [title]
+    for index, row in enumerate(rows, 1):
+        display = f"@{row['username']}" if row["username"] else (row["first_name"] or "participant")
+        question_label = "total question" if total else "question"
+        if row["questions"] != 1:
+            question_label += "s"
+        points_label = "total pts" if total else "pts"
+        lines.append(
+            f"{index}. {html.escape(display)} — "
+            f"{row['questions']} {question_label} · {row['points']} {points_label}"
+        )
+    if not rows:
+        lines.append("No participants are registered for this chat.")
+    return lines
+
+
+def winner_lines(rows):
+    if not rows:
+        return ["🤝 <b>No winner today</b> — no participants are registered."]
+    top = rows[0]
+    if top["questions"] == 0:
+        return ["🤝 <b>No winner today</b> — nobody submitted a counted problem."]
+    tied = [
+        row for row in rows
+        if row["points"] == top["points"] and row["questions"] == top["questions"]
+    ]
+    if len(tied) == 1:
+        display = f"@{top['username']}" if top["username"] else (top["first_name"] or "participant")
+        return [
+            f"🥇 <b>Winner today: {html.escape(display)}</b>",
+            f"{top['points']} pts from {top['questions']} unique "
+            f"question{'s' if top['questions'] != 1 else ''}.",
+        ]
+
+    displays = [
+        f"@{row['username']}" if row["username"] else (row["first_name"] or "participant")
+        for row in tied
+    ]
+    return [
+        f"🥇 <b>Joint winners today: {html.escape(', '.join(displays))}</b>",
+        f"{top['points']} pts from {top['questions']} unique questions each.",
+    ]
+
+
 def evening_text(day, entries, users, chat_id):
     name, url = challenge(day)
-    rows = leaderboard_for_chat(entries, users, chat_id, day)
+    daily_rows = leaderboard_for_chat(entries, users, chat_id, day)
+    overall_rows = leaderboard_for_chat(entries, users, chat_id)
 
     lines = [
         f"🏆 <b>Day {day}/30 — Competition Results</b>",
         "",
         f"🧠 Official challenge: <b>{html.escape(name)}</b>",
-        f"<a href="{url}">Open problem</a>",
+        f'<a href="{html.escape(url, quote=True)}">Open problem</a>',
         "",
-        "📊 <b>Daily leaderboard</b>",
-    ]
-
-    for index, row in enumerate(rows, 1):
-        display = f"@{row['username']}" if row["username"] else (row["first_name"] or "participant")
-        lines.append(
-            f"{index}. {html.escape(display)} — "
-            f"{row['questions']} question{'s' if row['questions'] != 1 else ''} · "
-            f"{row['points']} pts"
-        )
-
-    if not rows:
-        lines.extend(["", "No participants are registered for this chat."])
-        return "\n".join(lines)
-
-    top = rows[0]
-    tied = [
-        row for row in rows
-        if row["points"] == top["points"] and row["questions"] == top["questions"]
-    ]
-
-    if top["questions"] == 0:
-        lines.extend(["", "🤝 <b>No winner today</b> — nobody submitted a counted problem."])
-    elif len(tied) == 1:
-        display = f"@{top['username']}" if top["username"] else (top["first_name"] or "participant")
-        lines.extend([
-            "",
-            f"🥇 <b>Winner: {html.escape(display)}</b>",
-            f"{top['points']} pts from {top['questions']} unique question{'s' if top['questions'] != 1 else ''}.",
-        ])
-    else:
-        displays = [
-            f"@{row['username']}" if row["username"] else (row["first_name"] or "participant")
-            for row in tied
-        ]
-        lines.extend([
-            "",
-            f"🥇 <b>Joint winners: {html.escape(', '.join(displays))}</b>",
-            f"{top['points']} pts from {top['questions']} unique questions each.",
-        ])
-
-    lines.extend([
+        *render_leaderboard("📅 <b>Daily leaderboard</b>", daily_rows),
+        "",
+        *winner_lines(daily_rows),
+        "",
+        *render_leaderboard("🏆 <b>Overall leaderboard</b>", overall_rows, total=True),
         "",
         "⚔️ Scoring: Easy 1 · Medium 2 · Hard 4",
         "🚫 Duplicate problems are ignored for scoring.",
-    ])
+    ]
     return "\n".join(lines)
-
 def main():
     day = current_day()
     backup = load_backup()
