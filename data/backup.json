@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-06T19:39:22.795322+00:00",
+  "updated_at": "2026-10-06T19:39:58.529216+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -53,6 +53,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/set-mismatch/submissions/2163863137",
       "submitted_at": "2026-10-06T19:39:20.191722+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 1,
+      "problem_slug": "how-many-numbers-are-smaller-than-the-current-number",
+      "problem_title": "How Many Numbers Are Smaller Than The Current Number",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/how-many-numbers-are-smaller-than-the-current-number/submissions/2164579080",
+      "submitted_at": "2026-10-06T19:39:56.409761+00:00"
     }
   ]
 }
