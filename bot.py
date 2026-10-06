@@ -10,7 +10,7 @@ import sqlite3
 from datetime import datetime, time, timezone
 from zoneinfo import ZoneInfo
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 from urllib.request import Request, urlopen
 
 from telegram import Update
@@ -29,6 +29,20 @@ GITHUB_BACKUP_BRANCH = os.environ.get("GITHUB_BACKUP_BRANCH", "data-backup")
 GITHUB_BACKUP_PATH = os.environ.get("GITHUB_BACKUP_PATH", "data/backup.json")
 
 START_DATE = datetime.fromisoformat(os.environ.get("CHALLENGE_START_DATE", datetime.now(timezone.utc).date().isoformat())).date()
+
+POINTS_BY_DIFFICULTY = {
+    "EASY": 1,
+    "MEDIUM": 2,
+    "HARD": 4,
+}
+LEETCODE_GRAPHQL_API = "https://leetcode.com/graphql"
+QUESTION_METADATA_QUERY = """
+query questionData($titleSlug: String!) {
+  question(titleSlug: $titleSlug) {
+    title
+    difficulty
+  }
+}
 
 CHALLENGES = [
     ("Two Sum", "https://leetcode.com/problems/two-sum/"),
@@ -87,6 +101,29 @@ def db():
             url TEXT NOT NULL,
             submitted_at TEXT NOT NULL,
             UNIQUE(chat_id, user_id, day)
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS competition_submissions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            chat_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            day INTEGER NOT NULL,
+            problem_slug TEXT NOT NULL,
+            problem_title TEXT NOT NULL,
+            difficulty TEXT NOT NULL,
+            points INTEGER NOT NULL,
+            url TEXT NOT NULL,
+            submitted_at TEXT NOT NULL,
+            UNIQUE(chat_id, user_id, problem_slug)
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS problem_metadata (
+            problem_slug TEXT PRIMARY KEY,
+            problem_title TEXT NOT NULL,
+            difficulty TEXT NOT NULL,
+            points INTEGER NOT NULL
         )
     """)
     conn.commit()
@@ -154,13 +191,31 @@ def backup_to_github():
             "SELECT chat_id, user_id, day, url, submitted_at FROM submissions"
         ).fetchall()
     ]
+    competition_submissions = [
+        {
+            "chat_id": row[0],
+            "user_id": row[1],
+            "day": row[2],
+            "problem_slug": row[3],
+            "problem_title": row[4],
+            "difficulty": row[5],
+            "points": row[6],
+            "url": row[7],
+            "submitted_at": row[8],
+        }
+        for row in conn.execute(
+            "SELECT chat_id, user_id, day, problem_slug, problem_title, difficulty, points, url, submitted_at "
+            "FROM competition_submissions"
+        ).fetchall()
+    ]
     conn.close()
 
     backup = {
-        "version": 1,
+        "version": 2,
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "users": users,
         "submissions": submissions,
+        "competition_submissions": competition_submissions,
     }
     content = base64.b64encode(
         (json.dumps(backup, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
@@ -242,12 +297,35 @@ def restore_from_github():
             for row in backup.get("submissions", [])
         ],
     )
+    conn.executemany(
+        """
+        INSERT OR IGNORE INTO competition_submissions(
+            chat_id,user_id,day,problem_slug,problem_title,difficulty,points,url,submitted_at
+        ) VALUES(?,?,?,?,?,?,?,?,?)
+        """,
+        [
+            (
+                row["chat_id"],
+                row["user_id"],
+                row["day"],
+                row["problem_slug"],
+                row["problem_title"],
+                row["difficulty"],
+                row["points"],
+                row["url"],
+                row["submitted_at"],
+            )
+            for row in backup.get("competition_submissions", [])
+            if row.get("problem_slug") and row.get("difficulty") and row.get("points") is not None
+        ],
+    )
     conn.commit()
     conn.close()
     logging.info(
-        "Restored %s users and %s submissions from GitHub.",
+        "Restored %s users, %s legacy submissions and %s competition submissions from GitHub.",
         len(backup.get("users", [])),
         len(backup.get("submissions", [])),
+        len(backup.get("competition_submissions", [])),
     )
     return True
 
@@ -276,7 +354,144 @@ def current_day():
 
 def challenge_message(day):
     name, url = challenge(day)
-    return f"🧠 Day {day}/30\n\n{name}\n{url}\n\nSend your LeetCode submission link here when you finish."
+    return (
+        f"🧠 Day {day}/30\n\n{name}\n{url}\n\n"
+        "⚔️ Competition mode: every unique LeetCode problem you submit counts.\n"
+        "Easy = 1 point · Medium = 2 points · Hard = 4 points.\n"
+        "Duplicate problems do not score again."
+    )
+
+
+def extract_problem_slug(url):
+    try:
+        path_parts = [part for part in urlparse(url).path.split("/") if part]
+    except ValueError:
+        return None
+
+    if "problems" not in path_parts:
+        return None
+
+    index = path_parts.index("problems")
+    if index + 1 >= len(path_parts):
+        return None
+
+    slug = path_parts[index + 1].strip().lower()
+    if not slug or "submissions" not in path_parts[index + 2:]:
+        return None
+    return slug
+
+
+def lookup_problem_metadata(problem_slug):
+    conn = db()
+    cached = conn.execute(
+        "SELECT problem_title, difficulty, points FROM problem_metadata WHERE problem_slug=?",
+        (problem_slug,),
+    ).fetchone()
+    conn.close()
+
+    if cached:
+        return {
+            "title": cached[0],
+            "difficulty": cached[1],
+            "points": cached[2],
+        }
+
+    payload = json.dumps({
+        "query": QUESTION_METADATA_QUERY,
+        "variables": {"titleSlug": problem_slug},
+    }).encode("utf-8")
+    request = Request(
+        LEETCODE_GRAPHQL_API,
+        data=payload,
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "leetcode-30-bot/2.0",
+            "Referer": f"https://leetcode.com/problems/{problem_slug}/",
+        },
+    )
+
+    try:
+        with urlopen(request, timeout=15) as response:
+            body = json.loads(response.read().decode("utf-8"))
+    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError):
+        logging.exception("Failed to fetch LeetCode metadata for %s", problem_slug)
+        return None
+
+    question = (body.get("data") or {}).get("question")
+    if not question or question.get("difficulty") not in POINTS_BY_DIFFICULTY:
+        logging.warning("No usable LeetCode metadata for %s: %s", problem_slug, body)
+        return None
+
+    difficulty = question["difficulty"]
+    points = POINTS_BY_DIFFICULTY[difficulty]
+    title = question["title"]
+
+    conn = db()
+    conn.execute(
+        """
+        INSERT OR REPLACE INTO problem_metadata(problem_slug,problem_title,difficulty,points)
+        VALUES(?,?,?,?)
+        """,
+        (problem_slug, title, difficulty, points),
+    )
+    conn.commit()
+    conn.close()
+
+    return {"title": title, "difficulty": difficulty, "points": points}
+
+
+def backfill_competition_submissions():
+    conn = db()
+    legacy_rows = conn.execute(
+        "SELECT chat_id,user_id,day,url,submitted_at FROM submissions"
+    ).fetchall()
+    conn.close()
+
+    created = 0
+    skipped = 0
+    for chat_id, user_id, day, url, submitted_at in legacy_rows:
+        problem_slug = extract_problem_slug(url)
+        if not problem_slug:
+            skipped += 1
+            continue
+
+        metadata = lookup_problem_metadata(problem_slug)
+        if not metadata:
+            skipped += 1
+            continue
+
+        conn = db()
+        cur = conn.execute(
+            """
+            INSERT OR IGNORE INTO competition_submissions(
+                chat_id,user_id,day,problem_slug,problem_title,difficulty,points,url,submitted_at
+            ) VALUES(?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                chat_id,
+                user_id,
+                day,
+                problem_slug,
+                metadata["title"],
+                metadata["difficulty"],
+                metadata["points"],
+                url,
+                submitted_at,
+            ),
+        )
+        conn.commit()
+        conn.close()
+        if cur.rowcount:
+            created += 1
+
+    if skipped:
+        logging.warning(
+            "Competition backfill skipped %s legacy submissions without verifiable problem metadata.",
+            skipped,
+        )
+    if created:
+        logging.info("Backfilled %s legacy submissions into competition scoring.", created)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -306,19 +521,35 @@ async def random_problem(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def progress(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(update)
     chat_id = update.effective_chat.id
+    day = current_day()
     conn = db()
     rows = conn.execute(
         "SELECT user_id, first_name, username FROM users WHERE chat_id=? ORDER BY first_name",
         (chat_id,),
     ).fetchall()
-    message = [f"🏆 Day {current_day()}/30", ""]
+    message = [f"🏆 Day {day}/30", ""]
     for user_id, first_name, username in rows:
-        solved = conn.execute(
-            "SELECT COUNT(*) FROM submissions WHERE chat_id=? AND user_id=?",
+        today_count, today_points = conn.execute(
+            """
+            SELECT COUNT(*), COALESCE(SUM(points), 0)
+            FROM competition_submissions
+            WHERE chat_id=? AND user_id=? AND day=?
+            """,
+            (chat_id, user_id, day),
+        ).fetchone()
+        total_count, total_points = conn.execute(
+            """
+            SELECT COUNT(*), COALESCE(SUM(points), 0)
+            FROM competition_submissions
+            WHERE chat_id=? AND user_id=?
+            """,
             (chat_id, user_id),
-        ).fetchone()[0]
+        ).fetchone()
         display = f"@{username}" if username else first_name
-        message.append(f"{display}: {solved}/30")
+        message.append(
+            f"{display}: today {today_count} questions / {today_points} pts · "
+            f"total {total_count} / {total_points} pts"
+        )
     conn.close()
     await update.effective_message.reply_text("\n".join(message))
 
@@ -326,22 +557,45 @@ async def progress(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(update)
     chat_id = update.effective_chat.id
+    day = current_day()
     conn = db()
     rows = conn.execute("""
-        SELECT u.first_name, u.username, COUNT(s.id) AS solved
+        SELECT u.first_name, u.username,
+               COUNT(s.id) AS solved,
+               COALESCE(SUM(s.points), 0) AS points
         FROM users u
-        LEFT JOIN submissions s
-          ON s.chat_id=u.chat_id AND s.user_id=u.user_id
+        LEFT JOIN competition_submissions s
+          ON s.chat_id=u.chat_id AND s.user_id=u.user_id AND s.day=?
         WHERE u.chat_id=?
         GROUP BY u.user_id
-        ORDER BY solved DESC, u.first_name ASC
-    """, (chat_id,)).fetchall()
+        ORDER BY points DESC, solved DESC, u.first_name ASC
+    """, (day, chat_id)).fetchall()
     conn.close()
 
-    message = [f"🏆 Leaderboard — Day {current_day()}/30", ""]
-    for index, (first_name, username, solved) in enumerate(rows, 1):
+    message = [f"🏆 Daily leaderboard — Day {day}/30", ""]
+    for index, (first_name, username, solved, points) in enumerate(rows, 1):
         display = f"@{username}" if username else first_name
-        message.append(f"{index}. {display} — {solved}/30")
+        message.append(f"{index}. {display} — {solved} questions · {points} pts")
+
+    if rows:
+        max_points = rows[0][3]
+        max_solved = rows[0][2]
+        winners = [
+            (first_name, username)
+            for first_name, username, solved, points in rows
+            if points == max_points and solved == max_solved
+        ]
+        if len(winners) == 1:
+            first_name, username = winners[0]
+            display = f"@{username}" if username else first_name
+            message.extend(["", f"🏆 Winner: {display} — {max_points} pts"])
+        else:
+            displays = [
+                f"@{username}" if username else first_name
+                for first_name, username in winners
+            ]
+            message.extend(["", f"🏆 Joint winners: {', '.join(displays)} — {max_points} pts"])
+
     await update.effective_message.reply_text("\n".join(message))
 
 
@@ -349,26 +603,82 @@ async def record_submission(update: Update, url: str):
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
     day = current_day()
+    problem_slug = extract_problem_slug(url)
+
+    if not problem_slug:
+        await update.effective_message.reply_text(
+            "❌ I need a problem-specific submission link so I can verify the difficulty.\n\n"
+            "Use a link like:\n"
+            "https://leetcode.com/problems/two-sum/submissions/123456789/\n\n"
+            "Generic /submissions/detail/... links do not contain enough public information for scoring."
+        )
+        return
+
+    metadata = await asyncio.to_thread(lookup_problem_metadata, problem_slug)
+    if not metadata:
+        await update.effective_message.reply_text(
+            "❌ I couldn't verify that LeetCode problem's difficulty right now. "
+            "Please try the same submission link again in a moment."
+        )
+        return
+
+    submitted_at = datetime.now(timezone.utc).isoformat()
     conn = db()
     existing = conn.execute(
-        "SELECT 1 FROM submissions WHERE chat_id=? AND user_id=? AND day=?",
-        (chat_id, user_id, day),
+        """
+        SELECT day, problem_title, difficulty, points
+        FROM competition_submissions
+        WHERE chat_id=? AND user_id=? AND problem_slug=?
+        """,
+        (chat_id, user_id, problem_slug),
     ).fetchone()
     if existing:
         conn.close()
-        await update.effective_message.reply_text(f"⚠️ You already submitted Day {day}.")
+        await update.effective_message.reply_text(
+            f"⚠️ Duplicate: {metadata['title']} was already counted on Day {existing[0]}. "
+            f"It is worth {existing[3]} point(s), so this submission adds 0 points."
+        )
         return
+
     conn.execute(
-        "INSERT INTO submissions(chat_id,user_id,day,url,submitted_at) VALUES(?,?,?,?,?)",
-        (chat_id, user_id, day, url, datetime.now(timezone.utc).isoformat()),
+        """
+        INSERT INTO competition_submissions(
+            chat_id,user_id,day,problem_slug,problem_title,difficulty,points,url,submitted_at
+        ) VALUES(?,?,?,?,?,?,?,?,?)
+        """,
+        (
+            chat_id,
+            user_id,
+            day,
+            problem_slug,
+            metadata["title"],
+            metadata["difficulty"],
+            metadata["points"],
+            url,
+            submitted_at,
+        ),
+    )
+    # Preserve the original table as a compatibility marker for "participated today".
+    conn.execute(
+        "INSERT OR IGNORE INTO submissions(chat_id,user_id,day,url,submitted_at) VALUES(?,?,?,?,?)",
+        (chat_id, user_id, day, url, submitted_at),
     )
     conn.commit()
     conn.close()
+
     backup_ok = await asyncio.to_thread(backup_to_github)
+    score = metadata["points"]
     if backup_ok:
-        await update.effective_message.reply_text(f"✅ Day {day} recorded for {update.effective_user.first_name}!\n💾 Backup saved.")
+        suffix = "💾 Backup saved."
     else:
-        await update.effective_message.reply_text(f"✅ Day {day} recorded for {update.effective_user.first_name}!\n⚠️ GitHub backup failed — the submission is saved locally, but it may be lost if Render restarts.")
+        suffix = "⚠️ GitHub backup failed — the score is only local until backup succeeds."
+
+    await update.effective_message.reply_text(
+        f"✅ {metadata['title']} counted!\n"
+        f"🎚 {metadata['difficulty'].title()} · +{score} point(s)\n"
+        f"🏆 Every unique problem counts once during the challenge.\n"
+        f"{suffix}"
+    )
 
 
 async def backup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -489,6 +799,7 @@ def main():
     logging.basicConfig(level=logging.INFO)
     db()
     restore_from_github()
+    backfill_competition_submissions()
     app = Application.builder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
