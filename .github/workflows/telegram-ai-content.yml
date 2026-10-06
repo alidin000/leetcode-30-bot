@@ -137,47 +137,99 @@ jobs:
               )
               return f"{title}\n\n{body}"
 
+          def split_message(text, limit=3900):
+              """Split at paragraph boundaries so Telegram never exceeds its limit."""
+              if len(text) <= limit:
+                  return [text]
+
+              paragraphs = text.split("\n\n")
+              chunks = []
+              current = ""
+
+              for paragraph in paragraphs:
+                  candidate = paragraph if not current else current + "\n\n" + paragraph
+                  if len(candidate) <= limit:
+                      current = candidate
+                  else:
+                      if current:
+                          chunks.append(current)
+                      # A single paragraph can still be large; split it safely.
+                      while len(paragraph) > limit:
+                          cut = paragraph.rfind("\n", 0, limit)
+                          if cut < 1000:
+                              cut = paragraph.rfind(" ", 0, limit)
+                          if cut < 1:
+                              cut = limit
+                          chunks.append(paragraph[:cut].rstrip())
+                          paragraph = paragraph[cut:].lstrip()
+                      current = paragraph
+
+              if current:
+                  chunks.append(current)
+
+              return chunks
+
+          def telegram_messages():
+              test_message = os.environ.get("TEST_MESSAGE", "").lower() == "true"
+
+              if test_message:
+                  # Never combine the full morning lesson and evening feedback:
+                  # together they can exceed Telegram's 4096-character limit.
+                  return split_message(morning_message(test=True)) + split_message(evening_message(test=True))
+
+              if content.get("date") != today:
+                  print(
+                      f"Skipping: content date {content.get('date')} "
+                      f"does not match Budapest date {today}."
+                  )
+                  return []
+
+              if hour == 9:
+                  return split_message(morning_message())
+              if hour == 19:
+                  return split_message(evening_message())
+
+              print(f"No AI message scheduled for local time {now.isoformat()}.")
+              return []
+
           now = datetime.now(ZoneInfo("Europe/Budapest"))
           hour = now.hour
           today = now.date().isoformat()
-          test_message = os.environ.get("TEST_MESSAGE", "").lower() == "true"
+          messages = telegram_messages()
 
-          if test_message:
-              message = (
-                  morning_message(test=True)
-                  + "\n\n━━━━━━━━━━━━━━━━\n\n"
-                  + evening_message(test=True)
-              )
-          elif hour == 9:
-              message = morning_message()
-          elif hour == 19:
-              message = evening_message()
-          else:
-              print(f"No AI message scheduled for local time {now.isoformat()}.")
-              raise SystemExit(0)
-
-          if not test_message and content.get("date") != today:
-              print(
-                  f"Skipping: content date {content.get('date')} "
-                  f"does not match Budapest date {today}."
-              )
+          if not messages:
               raise SystemExit(0)
 
           url = f"https://api.telegram.org/bot{token}/sendMessage"
+
           for chat_id in chat_ids:
-              payload = urllib.parse.urlencode({
-                  "chat_id": chat_id,
-                  "text": message,
-                  "parse_mode": "HTML",
-                  "disable_web_page_preview": "true",
-              }).encode()
+              for index, message in enumerate(messages, 1):
+                  payload = urllib.parse.urlencode({
+                      "chat_id": chat_id,
+                      "text": message,
+                      "parse_mode": "HTML",
+                      "disable_web_page_preview": "true",
+                  }).encode()
 
-              request = urllib.request.Request(url, data=payload, method="POST")
-              with urllib.request.urlopen(request) as response:
-                  result = json.loads(response.read().decode())
+                  request = urllib.request.Request(url, data=payload, method="POST")
+                  try:
+                      with urllib.request.urlopen(request) as response:
+                          result = json.loads(response.read().decode())
+                  except urllib.error.HTTPError as exc:
+                      error_body = exc.read().decode("utf-8", errors="replace")
+                      raise SystemExit(
+                          f"Telegram API HTTP {exc.code} for chat {chat_id}, "
+                          f"message {index}/{len(messages)}: {error_body}"
+                      )
 
-              if not result.get("ok"):
-                  raise SystemExit(f"Telegram API failed for chat {chat_id}: {result}")
+                  if not result.get("ok"):
+                      raise SystemExit(
+                          f"Telegram API failed for chat {chat_id}, "
+                          f"message {index}/{len(messages)}: {result}"
+                      )
 
-              print(f"Sent AI content to {chat_id}.")
+                  print(
+                      f"Sent AI content to {chat_id}, "
+                      f"message {index}/{len(messages)} ({len(message)} chars)."
+                  )
           PY
