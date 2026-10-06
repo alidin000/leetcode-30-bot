@@ -72,27 +72,57 @@ jobs:
 
           def extract_sections(raw):
               text = str(raw).strip()
-              marker = re.compile(r"^(.+?):\s*(.*)$")
               sections = {}
-              current = None
+              aliases = {
+                  "bottom line": "bottom line",
+                  "company / round": "company / round",
+                  "what candidates reported": "what candidates reported",
+                  "the hidden difficulty": "the hidden difficulty",
+                  "signal": "signal",
+                  "what happened next": "what happened next",
+                  "what they are really testing": "what they are really testing",
+                  "best way to prepare": "best way to prepare",
+                  "interviewer lens": "interviewer lens",
+                  "what repeats": "what repeats",
+                  "what the interview felt like": "what the interview felt like",
+                  "follow-up pattern": "follow-up pattern",
+                  "company-specific signal": "company-specific signal",
+                  "evidence caveat": "evidence caveat",
+                  "what to do with this": "what to do with this",
+              }
 
-              for line in text.splitlines():
-                  line = line.strip()
-                  if not line:
+              # The AI may prefix headings with emojis and may put a heading
+              # on its own line or at the start of a paragraph. Normalize both.
+              heading_re = re.compile(
+                  r"^[^A-Za-z0-9\n]*([^:]{2,60}):\s*(.*)$"
+              )
+
+              current = None
+              for paragraph in re.split(r"\n\s*\n", text):
+                  paragraph = paragraph.strip()
+                  if not paragraph:
                       continue
-                  match = marker.match(line)
-                  if match and match.group(1).strip().lower() in {
-                      "bottom line", "company / round", "what candidates reported",
-                      "the hidden difficulty", "signal", "what happened next",
-                      "what they are really testing", "best way to prepare",
-                      "interviewer lens", "what repeats", "what the interview felt like",
-                      "follow-up pattern", "company-specific signal", "evidence caveat",
-                      "what to do with this"
-                  }:
-                      current = match.group(1).strip().lower()
-                      sections[current] = match.group(2).strip()
-                  elif current:
-                      sections[current] = (sections[current] + " " + line).strip()
+
+                  lines = paragraph.splitlines()
+                  first = lines[0].strip()
+                  match = heading_re.match(first)
+
+                  if match:
+                      heading = match.group(1).strip().lower()
+                      heading = re.sub(r"^[^a-zA-Z]+", "", heading)
+                      heading = re.sub(r"\\s+$", "", heading)
+                      key = aliases.get(heading)
+                      if key:
+                          value = match.group(2).strip()
+                          if len(lines) > 1:
+                              value = (value + " " + " ".join(x.strip() for x in lines[1:])).strip()
+                          current = key
+                          sections[key] = value
+                          continue
+
+                  if current:
+                      sections[current] = (sections[current] + " " + paragraph).strip()
+
               return sections
 
           def take_first_sentence(text, max_chars=300):
