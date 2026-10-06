@@ -43,90 +43,124 @@ jobs:
           if not token:
               raise SystemExit("Missing TELEGRAM_BOT_TOKEN GitHub secret.")
 
-          subprocess.run(
-              ["git", "fetch", "origin", "data-backup:data-backup"],
-              check=True,
-          )
+          subprocess.run(["git", "fetch", "origin", "data-backup:data-backup"], check=True)
 
-          backup = json.loads(
-              subprocess.check_output(
-                  ["git", "show", "data-backup:data/backup.json"],
-                  text=True,
-              )
+          backup_raw = subprocess.check_output(
+              ["git", "show", "data-backup:data/backup.json"], text=True
           )
+          try:
+              backup = json.loads(backup_raw)
+          except json.JSONDecodeError as exc:
+              raise SystemExit(
+                  f"Invalid backup JSON on data-backup at line {exc.lineno}, "
+                  f"column {exc.colno}: {exc.msg}"
+              )
 
           chat_ids = sorted({
               str(user["chat_id"])
               for user in backup.get("users", [])
               if user.get("chat_id") is not None
           })
-
           if not chat_ids:
               raise SystemExit("No Telegram chat IDs found in data-backup/data/backup.json.")
 
           with open("ai/daily_content.json", encoding="utf-8") as f:
               content = json.load(f)
 
-          LABELS = {
-              "Question:": "🎯 <b>Question</b>",
-              "Reported signal:": "📡 <b>Reported signal</b>",
-              "Follow-ups:": "🔎 <b>Follow-ups</b>",
-              "What it tests:": "🧠 <b>What it tests</b>",
-              "Evidence:": "🧾 <b>Evidence</b>",
-              "Repeated signal:": "📈 <b>Repeated signal</b>",
-              "Candidate experience:": "👤 <b>Candidate experience</b>",
-              "Watch for:": "⚠️ <b>Watch for</b>",
-              "Evidence quality:": "🧾 <b>Evidence quality</b>",
-              "Sources:": "🔗 <b>Sources</b>",
-          }
+          def esc(value):
+              return html.escape(str(value).strip(), quote=False)
 
-          def format_ai_text(raw):
-              text = html.escape(str(raw).strip())
+          def extract_sections(raw):
+              text = str(raw).strip()
+              marker = re.compile(r"^(.+?):\s*(.*)$")
+              sections = {}
+              current = None
 
-              # Put each semantic section on its own visual block.
-              for label, rendered in LABELS.items():
-                  text = text.replace(label, f"\n\n{rendered}\n")
+              for line in text.splitlines():
+                  line = line.strip()
+                  if not line:
+                      continue
+                  match = marker.match(line)
+                  if match and match.group(1).strip().lower() in {
+                      "bottom line", "company / round", "what candidates reported",
+                      "the hidden difficulty", "signal", "what happened next",
+                      "what they are really testing", "best way to prepare",
+                      "interviewer lens", "what repeats", "what the interview felt like",
+                      "follow-up pattern", "company-specific signal", "evidence caveat",
+                      "what to do with this"
+                  }:
+                      current = match.group(1).strip().lower()
+                      sections[current] = match.group(2).strip()
+                  elif current:
+                      sections[current] = (sections[current] + " " + line).strip()
+              return sections
 
-              # Turn inline separators into real bullets.
-              text = text.replace(" • ", "\n• ")
+          def take_first_sentence(text, max_chars=300):
+              text = str(text).strip()
+              if len(text) <= max_chars:
+                  return text
+              m = re.search(r"(?<=[.!?])\s", text[max_chars - 80:max_chars + 80])
+              if m:
+                  end = max_chars - 80 + m.start() + 1
+                  return text[:end].strip()
+              return text[:max_chars].rstrip() + "…"
 
-              # Convert URLs into compact numbered links.
-              source_count = 0
-
-              def replace_url(match):
-                  nonlocal source_count
-                  source_count += 1
-                  url = match.group(0).rstrip(".,)")
-                  return f'<a href="{url}">Source {source_count}</a>'
-
-              text = re.sub(r"https?://[^\s<>]+", replace_url, text)
-
-              # Remove accidental spaces/newlines around section starts.
-              text = re.sub(r"\n{3,}", "\n\n", text)
-              return text.strip()
+          def source_links(raw, label="Sources"):
+              parts = str(raw).split("🔎 Sources:", 1)
+              if len(parts) != 2:
+                  return ""
+              urls = re.findall(r"https?://[^\s·]+", parts[1])
+              if not urls:
+                  return ""
+              links = [
+                  f'<a href="{html.escape(url, quote=True)}">Source {i}</a>'
+                  for i, url in enumerate(urls[:3], 1)
+              ]
+              return f"<b>🔗 {label}</b>  " + " · ".join(links)
 
           def morning_message(test=False):
-              title = (
-                  "🧪 <b>Interview Intel</b>"
-                  if test
-                  else f"🌅 <b>Day {content['day']} · Interview Intel</b>"
-              )
-              return (
-                  f"{title}\n\n"
-                  f"💼 <b>{html.escape(content['morning_concept'])}</b>\n\n"
-                  f"{format_ai_text(content['morning_concept_explanation'])}"
-              )
+              sections = extract_sections(content["morning_concept_explanation"])
+              # Keep the message intentionally compact for a phone screen.
+              question = sections.get("what candidates reported", "")
+              reported = sections.get("signal", "")
+              followups = sections.get("what happened next", "")
+              tests = sections.get("what they are really testing", "")
+              prepare = sections.get("best way to prepare", "")
+              evidence = sections.get("interviewer lens", "")
+
+              title = "🧪 <b>Interview Intel</b>" if test else f"🌅 <b>Day {content['day']} · Interview Intel</b>"
+              blocks = [
+                  f"💼 <b>{esc(content['morning_concept'].replace('🎯 ', ''))}</b>",
+                  f"<b>🎯 The interview</b>\n{esc(take_first_sentence(question, 360))}",
+                  f"<b>📡 Signal</b>\n{esc(take_first_sentence(reported, 260))}",
+                  f"<b>🔎 Follow-ups</b>\n{esc(take_first_sentence(followups, 300))}",
+                  f"<b>🧠 They test</b>\n{esc(take_first_sentence(tests, 280))}",
+                  f"<b>🧭 Prepare</b>\n{esc(take_first_sentence(prepare, 300))}",
+                  f"<b>🧾 Read it as</b>\n{esc(take_first_sentence(evidence, 220))}",
+              ]
+              sources = source_links(content["morning_concept_explanation"])
+              return title + "\n\n" + "\n\n".join(blocks) + (f"\n\n{sources}" if sources else "")
 
           def evening_message(test=False):
-              title = (
-                  "🧪 <b>Candidate Feedback</b>"
-                  if test
-                  else f"🌙 <b>Day {content['day']} · Candidate Feedback</b>"
-              )
-              return (
-                  f"{title}\n\n"
-                  f"{format_ai_text(content['evening_feedback'])}"
-              )
+              sections = extract_sections(content["evening_feedback"])
+              repeated = sections.get("what repeats", "")
+              experience = sections.get("what the interview felt like", "")
+              followups = sections.get("follow-up pattern", "")
+              company = sections.get("company-specific signal", "")
+              caveat = sections.get("evidence caveat", "")
+              todo = sections.get("what to do with this", "")
+
+              title = "🧪 <b>Candidate Feedback</b>" if test else f"🌙 <b>Day {content['day']} · Candidate Feedback</b>"
+              blocks = [
+                  f"<b>📈 Repeated signal</b>\n{esc(take_first_sentence(repeated, 320))}",
+                  f"<b>👤 Candidate experience</b>\n{esc(take_first_sentence(experience, 300))}",
+                  f"<b>⚠️ Watch for</b>\n{esc(take_first_sentence(followups, 280))}",
+                  f"<b>🏢 Company signal</b>\n{esc(take_first_sentence(company, 280))}",
+                  f"<b>🧾 Evidence quality</b>\n{esc(take_first_sentence(caveat, 260))}",
+                  f"<b>📚 Do this</b>\n{esc(take_first_sentence(todo, 280))}",
+              ]
+              sources = source_links(content["evening_feedback"])
+              return title + "\n\n" + "\n\n".join(blocks) + (f"\n\n{sources}" if sources else "")
 
           now = datetime.now(ZoneInfo("Europe/Budapest"))
           hour = now.hour
@@ -135,9 +169,9 @@ jobs:
 
           if test_message:
               message = (
-                  f"{morning_message(test)}\n\n"
-                  f"━━━━━━━━━━━━━━━━━━━━\n\n"
-                  f"{evening_message(test)}"
+                  morning_message(test)
+                  + "\n\n━━━━━━━━━━━━━━━━\n\n"
+                  + evening_message(test)
               )
           elif hour == 9:
               message = morning_message()
@@ -155,7 +189,6 @@ jobs:
               raise SystemExit(0)
 
           url = f"https://api.telegram.org/bot{token}/sendMessage"
-
           for chat_id in chat_ids:
               payload = urllib.parse.urlencode({
                   "chat_id": chat_id,
@@ -169,9 +202,7 @@ jobs:
                   result = json.loads(response.read().decode())
 
               if not result.get("ok"):
-                  raise SystemExit(
-                      f"Telegram API failed for chat {chat_id}: {result}"
-                  )
+                  raise SystemExit(f"Telegram API failed for chat {chat_id}: {result}")
 
               print(f"Sent AI content to {chat_id}.")
           PY
