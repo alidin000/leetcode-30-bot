@@ -280,7 +280,7 @@ def challenge_message(day):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(update)
-    await update.message.reply_text(
+    await update.effective_message.reply_text(
         "🏆 Welcome to LeetCode 30!\n\n"
         "Use /today for today's problem.\n"
         "Send your LeetCode submission link after solving.\n"
@@ -290,7 +290,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def today(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(update)
-    await update.message.reply_text(challenge_message(current_day()))
+    await update.effective_message.reply_text(challenge_message(current_day()))
 
 
 async def random_problem(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -298,7 +298,7 @@ async def random_problem(update: Update, context: ContextTypes.DEFAULT_TYPE):
     daily_name, _ = challenge(current_day())
     choices = [problem for problem in CHALLENGES if problem[0] != daily_name]
     name, url = random.choice(choices)
-    await update.message.reply_text(
+    await update.effective_message.reply_text(
         f"🎲 Random LeetCode problem\n\n{name}\n{url}"
     )
 
@@ -319,7 +319,7 @@ async def progress(update: Update, context: ContextTypes.DEFAULT_TYPE):
         display = f"@{username}" if username else first_name
         message.append(f"{display}: {solved}/30")
     conn.close()
-    await update.message.reply_text("\n".join(message))
+    await update.effective_message.reply_text("\n".join(message))
 
 
 async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -341,7 +341,7 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for index, (first_name, username, solved) in enumerate(rows, 1):
         display = f"@{username}" if username else first_name
         message.append(f"{index}. {display} — {solved}/30")
-    await update.message.reply_text("\n".join(message))
+    await update.effective_message.reply_text("\n".join(message))
 
 
 async def record_submission(update: Update, url: str):
@@ -355,7 +355,7 @@ async def record_submission(update: Update, url: str):
     ).fetchone()
     if existing:
         conn.close()
-        await update.message.reply_text(f"⚠️ You already submitted Day {day}.")
+        await update.effective_message.reply_text(f"⚠️ You already submitted Day {day}.")
         return
     conn.execute(
         "INSERT INTO submissions(chat_id,user_id,day,url,submitted_at) VALUES(?,?,?,?,?)",
@@ -365,38 +365,38 @@ async def record_submission(update: Update, url: str):
     conn.close()
     backup_ok = await asyncio.to_thread(backup_to_github)
     if backup_ok:
-        await update.message.reply_text(f"✅ Day {day} recorded for {update.effective_user.first_name}!\n💾 Backup saved.")
+        await update.effective_message.reply_text(f"✅ Day {day} recorded for {update.effective_user.first_name}!\n💾 Backup saved.")
     else:
-        await update.message.reply_text(f"✅ Day {day} recorded for {update.effective_user.first_name}!\n⚠️ GitHub backup failed — the submission is saved locally, but it may be lost if Render restarts.")
+        await update.effective_message.reply_text(f"✅ Day {day} recorded for {update.effective_user.first_name}!\n⚠️ GitHub backup failed — the submission is saved locally, but it may be lost if Render restarts.")
 
 
 async def backup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(update)
     ok = await asyncio.to_thread(backup_to_github)
     if ok:
-        await update.message.reply_text("💾 Backup completed successfully.")
+        await update.effective_message.reply_text("💾 Backup completed successfully.")
     else:
-        await update.message.reply_text("❌ Backup failed. Check the Render logs and GitHub token permissions.")
+        await update.effective_message.reply_text("❌ Backup failed. Check the Render logs and GitHub token permissions.")
 
 async def submit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(update)
     if not context.args:
-        await update.message.reply_text(
+        await update.effective_message.reply_text(
             "Send your LeetCode submission link like:\n"
             "/submit https://leetcode.com/submissions/detail/123456789/"
         )
         return
     match = LEETCODE_URL.search(context.args[0])
     if not match:
-        await update.message.reply_text("❌ That doesn't look like a LeetCode submission link.")
+        await update.effective_message.reply_text("❌ That doesn't look like a LeetCode submission link.")
         return
     await record_submission(update, match.group(0))
 
 
 async def submission(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not update.message or not update.message.text:
+    if not update.effective_message or not update.effective_message.text:
         return
-    match = LEETCODE_URL.search(update.message.text)
+    match = LEETCODE_URL.search(update.effective_message.text)
     if not match:
         return
     register_user(update)
