@@ -13,8 +13,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlparse
 from urllib.request import Request, urlopen
 
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, MessageHandler, filters
 
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 DB_PATH = os.environ.get("DB_PATH", "leetcode30.db")
@@ -606,30 +606,17 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.effective_message.reply_text("\n".join(message))
 
 
-async def record_submission(update: Update, url: str):
-    chat_id = update.effective_chat.id
-    user_id = update.effective_user.id
-    day = current_day()
-    problem_slug = extract_problem_slug(url)
-
-    if not problem_slug:
-        await update.effective_message.reply_text(
-            "❌ I need a problem-specific submission link so I can verify the difficulty.\n\n"
-            "Use a link like:\n"
-            "https://leetcode.com/problems/two-sum/submissions/123456789/\n\n"
-            "Generic /submissions/detail/... links do not contain enough public information for scoring."
-        )
-        return
-
-    metadata = await asyncio.to_thread(lookup_problem_metadata, problem_slug)
-    if not metadata:
-        await update.effective_message.reply_text(
-            "❌ I couldn't verify that LeetCode problem's difficulty right now. "
-            "Please try the same submission link again in a moment."
-        )
-        return
-
-    submitted_at = datetime.now(timezone.utc).isoformat()
+def save_competition_submission(
+    chat_id,
+    user_id,
+    day,
+    problem_slug,
+    problem_title,
+    difficulty,
+    points,
+    url,
+    submitted_at,
+):
     conn = db()
     existing = conn.execute(
         """
@@ -639,13 +626,10 @@ async def record_submission(update: Update, url: str):
         """,
         (chat_id, user_id, problem_slug),
     ).fetchone()
+
     if existing:
         conn.close()
-        await update.effective_message.reply_text(
-            f"⚠️ Duplicate: {metadata['title']} was already counted on Day {existing[0]}. "
-            f"It is worth {existing[3]} point(s), so this submission adds 0 points."
-        )
-        return
+        return {"counted": False, "existing": existing}
 
     conn.execute(
         """
@@ -658,9 +642,9 @@ async def record_submission(update: Update, url: str):
             user_id,
             day,
             problem_slug,
-            metadata["title"],
-            metadata["difficulty"],
-            metadata["points"],
+            problem_title,
+            difficulty,
+            points,
             url,
             submitted_at,
         ),
@@ -672,17 +656,201 @@ async def record_submission(update: Update, url: str):
     )
     conn.commit()
     conn.close()
+    return {"counted": True, "existing": None}
+
+
+async def finish_submission(update, problem_title, difficulty, points, pending):
+    chat_id = pending["chat_id"]
+    user_id = pending["user_id"]
+    day = pending["day"]
+    problem_slug = pending["problem_slug"]
+    url = pending["url"]
+    submitted_at = pending["submitted_at"]
+
+    result = save_competition_submission(
+        chat_id=chat_id,
+        user_id=user_id,
+        day=day,
+        problem_slug=problem_slug,
+        problem_title=problem_title,
+        difficulty=difficulty,
+        points=points,
+        url=url,
+        submitted_at=submitted_at,
+    )
+
+    if not result["counted"]:
+        existing = result["existing"]
+        text = (
+            f"⚠️ Duplicate: {problem_title} was already counted on Day {existing[0]}. "
+            f"It is worth {existing[3]} point(s), so this submission adds 0 points."
+        )
+    else:
+        backup_ok = await asyncio.to_thread(backup_to_github)
+        suffix = (
+            "💾 Backup saved."
+            if backup_ok
+            else "⚠️ GitHub backup failed — the score is only local until backup succeeds."
+        )
+        text = (
+            f"✅ {problem_title} counted!\n"
+            f"🎚 {difficulty.title()} · +{points} point(s)\n"
+            f"🏆 Every unique problem counts once during the challenge.\n"
+            f"{suffix}"
+        )
+
+    message = update.effective_message
+    if message:
+        await message.reply_text(text)
+    else:
+        await update.callback_query.edit_message_text(text)
+
+
+async def record_submission(update: Update, url: str):
+    chat_id = update.effective_chat.id
+    user_id = update.effective_user.id
+    day = current_day()
+    problem_slug = extract_problem_slug(url)
+
+    if not problem_slug:
+        await update.effective_message.reply_text(
+            "❌ I need a problem-specific submission link so I can identify the problem.\n\n"
+            "Use a link like:\n"
+            "https://leetcode.com/problems/two-sum/submissions/123456789/\n\n"
+            "Generic /submissions/detail/... links do not contain enough public information for "
+            "duplicate detection and competition scoring."
+        )
+        return
+
+    metadata = await asyncio.to_thread(lookup_problem_metadata, problem_slug)
+    if not metadata:
+        pending_map = context.user_data.setdefault("pending_difficulty_submissions", {})
+        token = f"{datetime.now(timezone.utc).timestamp():.6f}".replace(".", "")[-12:]
+        pending_map[token] = {
+            "chat_id": chat_id,
+            "user_id": user_id,
+            "day": day,
+            "problem_slug": problem_slug,
+            "problem_title": problem_slug.replace("-", " ").title(),
+            "url": url,
+            "submitted_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+        keyboard = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("🟢 Easy · 1 pt", callback_data=f"diff:{token}:EASY"),
+                InlineKeyboardButton("🟠 Medium · 2 pts", callback_data=f"diff:{token}:MEDIUM"),
+            ],
+            [
+                InlineKeyboardButton("🔴 Hard · 4 pts", callback_data=f"diff:{token}:HARD"),
+            ],
+        ])
+        await update.effective_message.reply_text(
+            "⚠️ I couldn't retrieve this problem's difficulty automatically.\n\n"
+            f"<b>{html.escape(pending_map[token]['problem_title'])}</b>\n"
+            "Choose the LeetCode difficulty below. Your choice will be used for scoring.",
+            parse_mode="HTML",
+            reply_markup=keyboard,
+        )
+        return
+
+    submitted_at = datetime.now(timezone.utc).isoformat()
+    result = save_competition_submission(
+        chat_id=chat_id,
+        user_id=user_id,
+        day=day,
+        problem_slug=problem_slug,
+        problem_title=metadata["title"],
+        difficulty=metadata["difficulty"],
+        points=metadata["points"],
+        url=url,
+        submitted_at=submitted_at,
+    )
+
+    if not result["counted"]:
+        existing = result["existing"]
+        await update.effective_message.reply_text(
+            f"⚠️ Duplicate: {metadata['title']} was already counted on Day {existing[0]}. "
+            f"It is worth {existing[3]} point(s), so this submission adds 0 points."
+        )
+        return
 
     backup_ok = await asyncio.to_thread(backup_to_github)
     score = metadata["points"]
-    if backup_ok:
-        suffix = "💾 Backup saved."
-    else:
-        suffix = "⚠️ GitHub backup failed — the score is only local until backup succeeds."
+    suffix = (
+        "💾 Backup saved."
+        if backup_ok
+        else "⚠️ GitHub backup failed — the score is only local until backup succeeds."
+    )
 
     await update.effective_message.reply_text(
         f"✅ {metadata['title']} counted!\n"
         f"🎚 {metadata['difficulty'].title()} · +{score} point(s)\n"
+        f"🏆 Every unique problem counts once during the challenge.\n"
+        f"{suffix}"
+    )
+
+
+async def difficulty_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    parts = (query.data or "").split(":")
+    if len(parts) != 3 or parts[0] != "diff" or parts[2] not in POINTS_BY_DIFFICULTY:
+        await query.edit_message_text("❌ This difficulty selection is no longer valid.")
+        return
+
+    token = parts[1]
+    difficulty = parts[2]
+    pending_map = context.user_data.get("pending_difficulty_submissions", {})
+    pending = pending_map.pop(token, None)
+
+    if not pending:
+        await query.edit_message_text(
+            "⚠️ This submission request has expired. Please send the submission link again."
+        )
+        return
+
+    if query.message and query.message.chat_id != pending["chat_id"]:
+        await query.edit_message_text("❌ This submission belongs to another chat.")
+        return
+
+    if query.from_user.id != pending["user_id"]:
+        await query.edit_message_text("❌ Only the participant who submitted the link can choose its difficulty.")
+        return
+
+    title = pending["problem_title"]
+    points = POINTS_BY_DIFFICULTY[difficulty]
+    result = save_competition_submission(
+        chat_id=pending["chat_id"],
+        user_id=pending["user_id"],
+        day=pending["day"],
+        problem_slug=pending["problem_slug"],
+        problem_title=title,
+        difficulty=difficulty,
+        points=points,
+        url=pending["url"],
+        submitted_at=pending["submitted_at"],
+    )
+
+    if not result["counted"]:
+        existing = result["existing"]
+        await query.edit_message_text(
+            f"⚠️ Duplicate: {title} was already counted on Day {existing[0]}. "
+            f"It is worth {existing[3]} point(s), so this submission adds 0 points."
+        )
+        return
+
+    backup_ok = await asyncio.to_thread(backup_to_github)
+    suffix = (
+        "💾 Backup saved."
+        if backup_ok
+        else "⚠️ GitHub backup failed — the score is only local until backup succeeds."
+    )
+
+    await query.edit_message_text(
+        f"✅ {title} counted!\n"
+        f"🎚 {difficulty.title()} · +{points} point(s)\n"
         f"🏆 Every unique problem counts once during the challenge.\n"
         f"{suffix}"
     )
@@ -701,7 +869,7 @@ async def submit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         await update.effective_message.reply_text(
             "Send your LeetCode submission link like:\n"
-            "/submit https://leetcode.com/submissions/detail/123456789/"
+            "/submit https://leetcode.com/problems/two-sum/submissions/123456789/"
         )
         return
     match = LEETCODE_URL.search(context.args[0])
@@ -814,6 +982,7 @@ def main():
     app.add_handler(CommandHandler("random", random_problem))
     app.add_handler(CommandHandler("submit", submit_command))
     app.add_handler(CommandHandler("backup", backup_command))
+    app.add_handler(CallbackQueryHandler(difficulty_callback, pattern=r"^diff:"))
     app.add_handler(CommandHandler("testtag", test_tag))
     app.add_handler(CommandHandler("progress", progress))
     app.add_handler(CommandHandler("leaderboard", leaderboard))
