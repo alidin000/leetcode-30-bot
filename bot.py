@@ -886,7 +886,7 @@ async def submission(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not match:
         return
     register_user(update)
-    await record_submission(update, match.group(0))
+    await record_submission(update, match.group(0), context)
 
 
 def incomplete_users(chat_id, day):
