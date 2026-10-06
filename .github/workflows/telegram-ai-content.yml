@@ -73,47 +73,113 @@ jobs:
                       f"column {exc.colno}: {exc.msg}"
                   )
 
+          def markdown_to_telegram_html(raw):
+              """Convert ordinary AI Markdown into safe Telegram HTML generically."""
+              text = str(raw).strip()
+              blocks = []
+
+              # Protect fenced code blocks before escaping/inline formatting.
+              fence_re = re.compile(r"(?s)\`\`\`(?:[A-Za-z0-9_+.-]+)?\n?(.*?)\`\`\`")
+              def save_code(match):
+                  value = match.group(1).strip("\\n")
+                  blocks.append("<pre>" + html.escape(value, quote=False) + "</pre>")
+                  return f"@@CODEBLOCK_{len(blocks)-1}@@"
+
+              text = fence_re.sub(save_code, text)
+
+              # Protect inline code.
+              inline_codes = []
+              def save_inline(match):
+                  inline_codes.append("<code>" + html.escape(match.group(1), quote=False) + "</code>")
+                  return f"@@INLINECODE_{len(inline_codes)-1}@@"
+
+              text = re.sub(r"`([^\`\n]+)`", save_inline, text)
+
+              text = html.escape(text, quote=False)
+
+              # Markdown links.
+              text = re.sub(
+                  r"\[([^\]]+)\]\((https?://[^)\s]+)\)",
+                  lambda m: '<a href="' + html.escape(m.group(2), quote=True) + '">' +
+                            html.escape(m.group(1), quote=False) + "</a>",
+                  text,
+              )
+
+              # Raw URLs.
+              text = re.sub(
+                  r"https?://[^\s<>]+",
+                  lambda m: '<a href="' + html.escape(m.group(0).rstrip(".,)"), quote=True) + '">' +
+                            html.escape(m.group(0).rstrip(".,)"), quote=False) + "</a>",
+                  text,
+              )
+
+              # Generic Markdown emphasis.
+              text = re.sub(r"\*\*([^*\n]+)\*\*", r"<b>\1</b>", text)
+              text = re.sub(r"(?<!\*)\*([^*\n]+)\*(?!\*)", r"<i>\1</i>", text)
+              text = re.sub(r"__([^_\n]+)__", r"<b>\1</b>", text)
+              text = re.sub(r"(?<!_)_([^_\n]+)_(?!_)", r"<i>\1</i>", text)
+
+              # Headings of any level: # Heading -> bold Heading.
+              text = re.sub(r"(?m)^\s{0,3}#{1,6}\s+(.+?)\s*$", r"<b>\1</b>", text)
+
+              # Markdown blockquotes.
+              text = re.sub(r"(?m)^\s*>\s?(.*)$", r"│ \1", text)
+
+              # Normalize unordered/ordered list markers into Telegram-friendly bullets.
+              text = re.sub(r"(?m)^\s*[-*+]\s+", "• ", text)
+              text = re.sub(r"(?m)^\s*\d+[.)]\s+", "• ", text)
+
+              # Markdown horizontal rules.
+              text = re.sub(r"(?m)^\s*(?:---+|___+|\*\*\*+)\s*$", "────────────", text)
+
+              # Restore protected code blocks/inline code.
+              for i, value in enumerate(blocks):
+                  text = text.replace(f"@@CODEBLOCK_{i}@@", value)
+              for i, value in enumerate(inline_codes):
+                  text = text.replace(f"@@INLINECODE_{i}@@", value)
+
+              # Telegram renders literal angle brackets poorly if left in text;
+              # html.escape above already made ordinary text safe.
+              text = re.sub(r"\n{4,}", "\n\n", text)
+              return text.strip()
+
           def format_content(raw, drop_first_heading=None):
-              """Preserve the AI-written lesson and style headings only."""
               text = str(raw).strip()
               if drop_first_heading:
                   lines = text.splitlines()
                   if lines and lines[0].strip().lower() == drop_first_heading.lower():
                       text = "\n".join(lines[1:]).strip()
+              return markdown_to_telegram_html(text)
 
-              text = html.escape(text, quote=False)
+          def split_message(text, limit=3900):
+              """Split at paragraph boundaries so Telegram stays below 4096 chars."""
+              if len(text) <= limit:
+                  return [text]
 
-              headings = [
-                  "🎯 The idea",
-                  "🔧 How it works",
-                  "🧪 A real example",
-                  "⚖️ Trade-offs",
-                  "🧩 The subtle part: composite indexes",
-                  "💥 What can go wrong?",
-                  "🏗 Where you see it",
-                  "🎤 Interview connection",
-                  "🔎 Sources",
-                  "🎯 Bottom line",
-                  "📊 What to watch for",
-                  "📚 What to do with this",
-                  "⚠️ Evidence caveat",
-              ]
+              paragraphs = text.split("\n\n")
+              chunks = []
+              current = ""
 
-              for heading in headings:
-                  safe = html.escape(heading, quote=False)
-                  text = text.replace("\n" + safe + "\n", "\n<b>" + safe + "</b>\n")
-                  text = text.replace(safe + "\n", "<b>" + safe + "</b>\n")
+              for paragraph in paragraphs:
+                  candidate = paragraph if not current else current + "\n\n" + paragraph
+                  if len(candidate) <= limit:
+                      current = candidate
+                  else:
+                      if current:
+                          chunks.append(current)
+                      while len(paragraph) > limit:
+                          cut = paragraph.rfind("\n", 0, limit)
+                          if cut < 500:
+                              cut = paragraph.rfind(" ", 0, limit)
+                          if cut < 1:
+                              cut = limit
+                          chunks.append(paragraph[:cut].rstrip())
+                          paragraph = paragraph[cut:].lstrip()
+                      current = paragraph
 
-              def link_url(match):
-                  url = match.group(0).rstrip(".,)")
-                  return (
-                      '<a href="' + html.escape(url, quote=True) + '">'
-                      + html.escape(url, quote=False) + '</a>'
-                  )
-
-              text = re.sub(r"https?://[^\s<>]+", link_url, text)
-              text = re.sub(r"\n{4,}", "\n\n", text)
-              return text.strip()
+              if current:
+                  chunks.append(current)
+              return chunks
 
           def morning_message(test=False):
               title = (
