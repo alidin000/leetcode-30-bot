@@ -62,7 +62,7 @@ CHALLENGES = [
     ("Trapping Rain Water", "https://leetcode.com/problems/trapping-rain-water/"),
 ]
 
-LEETCODE_URL = re.compile(r"https?://(?:www\.)?leetcode\.com/(?:problems/[^/\s]+/)?submissions(?:/detail)?/[^\s)]+", re.I)
+LEETCODE_URL = re.compile(r"https?://(?:www\.)?leetcode\.com/(?:problems/[^/\s]+/(?:submissions(?:/detail)?/[^\s)]+|\d+/?(?:\?[^\s)]*)?)|submissions(?:/detail)?/[^\s)]+)", re.I)
 
 
 def db():
