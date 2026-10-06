@@ -1,6 +1,13 @@
 {
   "version": 1,
-  "updated_at": null,
-  "users": [],
+  "updated_at": "2026-10-06T05:20:46.729315+00:00",
+  "users": [
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "username": "alidinn",
+      "first_name": "Alidin"
+    }
+  ],
   "submissions": []
 }
