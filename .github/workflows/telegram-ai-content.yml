@@ -29,8 +29,10 @@ jobs:
           TEST_MESSAGE: ${{ inputs.test_message }}
         run: |
           python - <<'PY'
+          import html
           import json
           import os
+          import re
           import subprocess
           import urllib.parse
           import urllib.request
@@ -65,6 +67,55 @@ jobs:
           with open("ai/daily_content.json", encoding="utf-8") as f:
               content = json.load(f)
 
+          def format_ai_text(text):
+              """Turn AI prose into compact, readable Telegram HTML."""
+              text = html.escape(str(text).strip())
+
+              # Make the common labels visually scannable.
+              labels = [
+                  "Candidate feedback:",
+                  "Sources:",
+                  "Likely follow-ups:",
+                  "What it tests:",
+                  "One-off example:",
+              ]
+              for label in labels:
+                  text = text.replace(
+                      label,
+                      f"\n\n<b>{label}</b>"
+                  )
+
+              # Put each source on its own compact line and hide long URLs.
+              url_pattern = r"https?://[^\s<>]+"
+              source_index = 0
+
+              def link(match):
+                  nonlocal source_index
+                  source_index += 1
+                  url = match.group(0).rstrip(".,)")
+                  return f'<a href="{url}">Source {source_index}</a>'
+
+              text = re.sub(url_pattern, link, text)
+
+              # Clean up excessive blank lines while preserving section breaks.
+              text = re.sub(r"\n{3,}", "\n\n", text)
+              return text.strip()
+
+          def morning_message(test=False):
+              prefix = "🧪 <b>Interview Intel Test</b>" if test else f"🌅 <b>Day {content['day']} — Interview Intel</b>"
+              return (
+                  f"{prefix}\n\n"
+                  f"💼 <b>{html.escape(content['morning_concept'])}</b>\n\n"
+                  f"{format_ai_text(content['morning_concept_explanation'])}"
+              )
+
+          def evening_message(test=False):
+              prefix = "🌙 <b>Candidate Feedback Test</b>" if test else f"🌙 <b>Day {content['day']} — Candidate Feedback</b>"
+              return (
+                  f"{prefix}\n\n"
+                  f"{format_ai_text(content['evening_feedback'])}"
+              )
+
           now = datetime.now(ZoneInfo("Europe/Budapest"))
           hour = now.hour
           today = now.date().isoformat()
@@ -72,22 +123,14 @@ jobs:
 
           if test_message:
               message = (
-                  f"🧪 <b>Interview Intel Test — Day {content['day']}</b>\n\n"
-                  f"<b>{content['morning_concept']}</b>\n"
-                  f"{content['morning_concept_explanation']}\n\n"
-                  f"🌙 <b>Evening:</b> {content['evening_feedback']}"
+                  f"{morning_message(test=True)}\n\n"
+                  f"{'━' * 24}\n\n"
+                  f"{evening_message(test=True)}"
               )
           elif hour == 9:
-              message = (
-                  f"🌅 <b>Day {content['day']} — Interview Intel</b>\n\n"
-                  f"<b>{content['morning_concept']}</b>\n"
-                  f"{content['morning_concept_explanation']}"
-              )
+              message = morning_message()
           elif hour == 19:
-              message = (
-                  f"🌙 <b>Day {content['day']} — Candidate Feedback</b>\n\n"
-                  f"{content['evening_feedback']}"
-              )
+              message = evening_message()
           else:
               print(f"No AI message scheduled for local time {now.isoformat()}.")
               raise SystemExit(0)
@@ -106,6 +149,7 @@ jobs:
                   "chat_id": chat_id,
                   "text": message,
                   "parse_mode": "HTML",
+                  "disable_web_page_preview": "true",
               }).encode()
 
               request = urllib.request.Request(url, data=payload, method="POST")
