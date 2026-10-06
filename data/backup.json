@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-06T20:07:08.273836+00:00",
+  "updated_at": "2026-10-06T20:26:34.765184+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -64,6 +64,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/how-many-numbers-are-smaller-than-the-current-number/submissions/2164579080",
       "submitted_at": "2026-10-06T19:39:56.409761+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 1,
+      "problem_slug": "partition-equal-subset-sum",
+      "problem_title": "Partition Equal Subset Sum",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/partition-equal-subset-sum/submissions/2164018840",
+      "submitted_at": "2026-10-06T20:26:32.190485+00:00"
     }
   ]
 }
