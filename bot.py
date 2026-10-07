@@ -28,7 +28,7 @@ GITHUB_BACKUP_REPO = os.environ.get("GITHUB_BACKUP_REPO", "alidin000/leetcode-30
 GITHUB_BACKUP_BRANCH = os.environ.get("GITHUB_BACKUP_BRANCH", "data-backup")
 GITHUB_BACKUP_PATH = os.environ.get("GITHUB_BACKUP_PATH", "data/backup.json")
 
-START_DATE = datetime.fromisoformat(os.environ.get("CHALLENGE_START_DATE", datetime.now(timezone.utc).date().isoformat())).date()
+START_DATE = datetime.fromisoformat("2026-10-06").date()
 
 POINTS_BY_DIFFICULTY = {
     "EASY": 1,
@@ -402,6 +402,34 @@ def challenge(day):
 def current_day():
     today = datetime.now(TIMEZONE).date()
     return min(30, max(1, (today - START_DATE).days + 1))
+
+
+def normalize_submission_days():
+    conn = db()
+    rows = conn.execute(
+        "SELECT id, submitted_at FROM competition_submissions"
+    ).fetchall()
+    changed = 0
+    for submission_id, submitted_at in rows:
+        try:
+            submitted_date = datetime.fromisoformat(submitted_at).astimezone(TIMEZONE).date()
+        except (TypeError, ValueError):
+            continue
+        calculated_day = min(30, max(1, (submitted_date - START_DATE).days + 1))
+        current = conn.execute(
+            "SELECT day FROM competition_submissions WHERE id=?",
+            (submission_id,),
+        ).fetchone()
+        if current and current[0] != calculated_day:
+            conn.execute(
+                "UPDATE competition_submissions SET day=? WHERE id=?",
+                (calculated_day, submission_id),
+            )
+            changed += 1
+    conn.commit()
+    conn.close()
+    if changed:
+        logging.info("Normalized %s competition submission day assignments.", changed)
 
 
 def challenge_message(day):
@@ -1069,6 +1097,7 @@ def main():
     restored = restore_with_retries()
     if restored:
         backfill_competition_submissions()
+        normalize_submission_days()
         # Only back up after a successful restore. This prevents an empty or
         # incomplete local database from replacing the durable GitHub backup.
         backup_to_github()
