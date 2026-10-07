@@ -192,13 +192,28 @@ jobs:
               return chunks
 
           def morning_message(test=False):
+              # The AI task prepares the following day's full lesson in next_*.
+              # This lets the 09:00 delivery work even though AI generation runs
+              # the previous evening.
+              delivery_day = content["day"]
+              delivery_concept = content["morning_concept"]
+              delivery_body = content["morning_concept_explanation"]
+
+              if content.get("date") != today and content.get("next_day"):
+                  delivery_day = content["next_day"]
+                  delivery_concept = content.get("next_morning_concept", delivery_concept)
+                  delivery_body = content.get(
+                      "next_morning_concept_explanation",
+                      delivery_body,
+                  )
+
               title = (
                   "🧪 <b>Interview Intel</b>"
                   if test
-                  else f"🌅 <b>Day {content['day']} · Interview Intel</b>"
+                  else f"🌅 <b>Day {delivery_day} · Interview Intel</b>"
               )
-              concept = html.escape(str(content["morning_concept"]).strip(), quote=False)
-              body = format_content(content["morning_concept_explanation"])
+              concept = html.escape(str(delivery_concept).strip(), quote=False)
+              body = format_content(delivery_body)
               return f"{title}\n\n<b>{concept}</b>\n\n{body}"
 
           def evening_message(test=False):
@@ -221,7 +236,9 @@ jobs:
                   # together they can exceed Telegram's 4096-character limit.
                   return split_message(morning_message(test=True)) + split_message(evening_message(test=True))
 
-              if content.get("date") != today:
+              if content.get("date") != today and not (
+                  hour == 9 and content.get("next_day")
+              ):
                   print(
                       f"Skipping: content date {content.get('date')} "
                       f"does not match Budapest date {today}."
