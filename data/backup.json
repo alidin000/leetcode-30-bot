@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-07T21:02:14.896444+00:00",
+  "updated_at": "2026-10-07T21:05:06.053904+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -79,7 +79,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 1,
+      "day": 2,
       "problem_slug": "middle-of-the-linked-list",
       "problem_title": "Middle Of The Linked List",
       "difficulty": "EASY",
