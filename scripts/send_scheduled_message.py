@@ -76,8 +76,9 @@ def scheduled_day(selected_mode):
     reference_date = now.date()
 
     if selected_mode == "evening":
-        scheduled_time = (19, 15)
-        if (now.hour, now.minute) < scheduled_time:
+        # Evening results belong to the calendar day that just ended if the
+        # scheduled GitHub Actions run is delayed past midnight.
+        if now.hour < 12:
             reference_date = reference_date.fromordinal(reference_date.toordinal() - 1)
 
     return min(30, max(1, (reference_date - START_DATE).days + 1))
