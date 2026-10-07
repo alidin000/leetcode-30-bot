@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-07T21:05:06.053904+00:00",
+  "updated_at": "2026-10-07T21:09:03.271161+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -29,6 +29,13 @@
       "day": 1,
       "url": "https://leetcode.com/submissions/detail/2164018840/",
       "submitted_at": "2026-10-06T08:33:42.418931+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 2,
+      "url": "https://leetcode.com/problems/partition-equal-subset-sum/submissions/2165751814",
+      "submitted_at": "2026-10-07T21:09:00.358315+00:00"
     }
   ],
   "competition_submissions": [
@@ -86,6 +93,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/middle-of-the-linked-list/submissions/2165745888/",
       "submitted_at": "2026-10-07T21:02:01.405919+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 2,
+      "problem_slug": "partition-equal-subset-sum",
+      "problem_title": "Partition Equal Subset Sum",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/partition-equal-subset-sum/submissions/2165751814",
+      "submitted_at": "2026-10-07T21:09:00.358315+00:00"
     }
   ]
 }
