@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-07T21:00:42.330534+00:00",
+  "updated_at": "2026-10-07T21:02:14.896444+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -75,6 +75,17 @@
       "points": 2,
       "url": "https://leetcode.com/problems/partition-equal-subset-sum/submissions/2164018840",
       "submitted_at": "2026-10-06T20:26:32.190485+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 1,
+      "problem_slug": "middle-of-the-linked-list",
+      "problem_title": "Middle Of The Linked List",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/middle-of-the-linked-list/submissions/2165745888/",
+      "submitted_at": "2026-10-07T21:02:01.405919+00:00"
     }
   ]
 }
