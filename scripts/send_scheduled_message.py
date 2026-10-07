@@ -65,6 +65,23 @@ def current_day():
     today = datetime.now(TIMEZONE).date()
     return min(30, max(1, (today - START_DATE).days + 1))
 
+
+def scheduled_day(selected_mode):
+    """
+    Return the challenge day represented by the scheduled message.
+    Evening results belong to the challenge day whose 19:15 run was scheduled,
+    even if GitHub Actions starts the delayed job after midnight.
+    """
+    now = datetime.now(TIMEZONE)
+    reference_date = now.date()
+
+    if selected_mode == "evening":
+        scheduled_time = (19, 15)
+        if (now.hour, now.minute) < scheduled_time:
+            reference_date = reference_date.fromordinal(reference_date.toordinal() - 1)
+
+    return min(30, max(1, (reference_date - START_DATE).days + 1))
+
 def challenge(day):
     import random
     shuffled = random.Random(START_DATE.toordinal()).sample(CHALLENGES, len(CHALLENGES))
@@ -317,11 +334,11 @@ def evening_text(day, entries, users, chat_id):
     ]
     return "\n".join(lines)
 def main():
-    day = current_day()
     backup = load_backup()
     users = backup.get("users", [])
     entries = build_competition_entries(backup)
     selected_mode = mode()
+    day = scheduled_day(selected_mode)
     chats = sorted({row["chat_id"] for row in users})
 
     if selected_mode == "morning":
