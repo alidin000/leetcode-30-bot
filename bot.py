@@ -1113,7 +1113,7 @@ def main():
         port=PORT,
         url_path="telegram",
         webhook_url=f"https://{RENDER_EXTERNAL_URL.rstrip('/').removeprefix('https://').removeprefix('http://')}/telegram",
-        drop_pending_updates=True,
+        drop_pending_updates=False,
     )
 
 
