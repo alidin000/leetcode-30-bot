@@ -192,20 +192,9 @@ jobs:
               return chunks
 
           def morning_message(test=False):
-              # The AI task prepares the following day's full lesson in next_*.
-              # This lets the 09:00 delivery work even though AI generation runs
-              # the previous evening.
               delivery_day = content["day"]
               delivery_concept = content["morning_concept"]
               delivery_body = content["morning_concept_explanation"]
-
-              if content.get("date") != today and content.get("next_day"):
-                  delivery_day = content["next_day"]
-                  delivery_concept = content.get("next_morning_concept", delivery_concept)
-                  delivery_body = content.get(
-                      "next_morning_concept_explanation",
-                      delivery_body,
-                  )
 
               title = (
                   "🧪 <b>Interview Intel</b>"
@@ -236,9 +225,7 @@ jobs:
                   # together they can exceed Telegram's 4096-character limit.
                   return split_message(morning_message(test=True)) + split_message(evening_message(test=True))
 
-              if content.get("date") != today and not (
-                  hour == 9 and content.get("next_day")
-              ):
+              if content.get("date") != today:
                   print(
                       f"Skipping: content date {content.get('date')} "
                       f"does not match Budapest date {today}."
