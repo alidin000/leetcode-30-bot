@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-08T20:14:04.667733+00:00",
+  "updated_at": "2026-10-08T20:19:01.589992+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -36,6 +36,13 @@
       "day": 2,
       "url": "https://leetcode.com/problems/partition-equal-subset-sum/submissions/2165751814",
       "submitted_at": "2026-10-07T21:09:00.358315+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 3,
+      "url": "https://leetcode.com/problems/find-all-numbers-disappeared-in-an-array/submissions/2166732451",
+      "submitted_at": "2026-10-08T20:18:59.268853+00:00"
     }
   ],
   "competition_submissions": [
@@ -104,6 +111,17 @@
       "points": 2,
       "url": "https://leetcode.com/problems/partition-equal-subset-sum/submissions/2165751814",
       "submitted_at": "2026-10-07T21:09:00.358315+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 3,
+      "problem_slug": "find-all-numbers-disappeared-in-an-array",
+      "problem_title": "Find All Numbers Disappeared In An Array",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/find-all-numbers-disappeared-in-an-array/submissions/2166732451",
+      "submitted_at": "2026-10-08T20:18:59.268853+00:00"
     }
   ]
 }
