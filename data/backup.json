@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-08T21:06:41.279378+00:00",
+  "updated_at": "2026-10-08T21:13:22.517945+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -43,6 +43,13 @@
       "day": 3,
       "url": "https://leetcode.com/problems/find-all-numbers-disappeared-in-an-array/submissions/2166732451",
       "submitted_at": "2026-10-08T20:18:59.268853+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 3,
+      "url": "https://leetcode.com/problems/container-with-most-water/submissions/2166753024",
+      "submitted_at": "2026-10-08T21:13:19.889603+00:00"
     }
   ],
   "competition_submissions": [
@@ -122,6 +129,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/find-all-numbers-disappeared-in-an-array/submissions/2166732451",
       "submitted_at": "2026-10-08T20:18:59.268853+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 3,
+      "problem_slug": "container-with-most-water",
+      "problem_title": "Container With Most Water",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/container-with-most-water/submissions/2166753024",
+      "submitted_at": "2026-10-08T21:13:19.889603+00:00"
     }
   ]
 }
