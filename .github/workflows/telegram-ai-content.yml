@@ -2,7 +2,10 @@ name: Telegram AI Content
 
 on:
   schedule:
-    - cron: "5 * * * *"
+    - cron: "5 8 * * *"
+      timezone: "Europe/Budapest"
+    - cron: "5 19 * * *"
+      timezone: "Europe/Budapest"
   workflow_dispatch:
     inputs:
       test_message:
@@ -27,6 +30,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TEST_MESSAGE: ${{ inputs.test_message }}
+          SCHEDULE: ${{ github.event.schedule }}
         run: |
           python - <<'PY'
           import html
@@ -64,28 +68,40 @@ jobs:
           if not chat_ids:
               raise SystemExit("No Telegram chat IDs found in data-backup/data/backup.json.")
 
-          def fallback_morning():
-              print("AI morning content is unavailable; sending the normal LeetCode challenge instead.")
-              env = os.environ.copy()
-              env["MANUAL_MODE"] = "morning"
-              subprocess.run(
-                  ["python", "scripts/send_scheduled_message.py"],
-                  check=True,
-                  env=env,
+          schedule = os.environ.get("SCHEDULE", "").strip()
+
+          if schedule == "5 8 * * *":
+              scheduled_mode = "morning"
+          elif schedule == "5 19 * * *":
+              scheduled_mode = "evening"
+          elif os.environ.get("TEST_MESSAGE", "").lower() == "true":
+              scheduled_mode = "test"
+          else:
+              scheduled_mode = None
+
+          now = datetime.now(ZoneInfo("Europe/Budapest"))
+          today = now.date().isoformat()
+
+          if scheduled_mode is None:
+              raise SystemExit(
+                  f"Unknown AI schedule trigger {schedule!r}; refusing to send."
               )
+
+          def expected_content_date():
+              if scheduled_mode == "morning":
+                  return today
+              if scheduled_mode == "evening":
+                  if now.hour < 12:
+                      return now.date().fromordinal(now.date().toordinal() - 1).isoformat()
+                  return today
+              return today
 
           try:
               with open("ai/daily_content.json", encoding="utf-8") as f:
                   content = json.load(f)
           except FileNotFoundError:
-              if hour == 9:
-                  fallback_morning()
-                  raise SystemExit(0)
               raise SystemExit("ai/daily_content.json is missing.")
           except json.JSONDecodeError as exc:
-              if hour == 9:
-                  fallback_morning()
-                  raise SystemExit(0)
               raise SystemExit(
                   f"Invalid ai/daily_content.json on main at line {exc.lineno}, "
                   f"column {exc.colno}: {exc.msg}"
@@ -236,34 +252,28 @@ jobs:
               return f"{title}\n\n{body}"
 
           def telegram_messages():
-              test_message = os.environ.get("TEST_MESSAGE", "").lower() == "true"
-
-              if test_message:
+              if scheduled_mode == "test":
                   # Never combine the full morning lesson and evening feedback:
                   # together they can exceed Telegram's 4096-character limit.
                   return split_message(morning_message(test=True)) + split_message(evening_message(test=True))
 
-              if content.get("date") != today:
-                  print(
-                      f"AI content date {content.get('date')} does not match "
-                      f"Budapest date {today}."
-                  )
-                  if hour == 9:
-                      fallback_morning()
-                      return []
-                  return []
+              expected_date = expected_content_date()
+              actual_date = content.get("date")
 
-              if hour == 9:
+              if actual_date != expected_date:
+                  raise SystemExit(
+                      f"AI content date {actual_date!r} does not match the "
+                      f"expected {scheduled_mode} delivery date {expected_date!r}. "
+                      "Refusing to send stale or future content."
+                  )
+
+              if scheduled_mode == "morning":
                   return split_message(morning_message())
-              if hour == 19:
+              if scheduled_mode == "evening":
                   return split_message(evening_message())
 
-              print(f"No AI message scheduled for local time {now.isoformat()}.")
-              return []
+              raise SystemExit(f"Unsupported AI delivery mode: {scheduled_mode!r}")
 
-          now = datetime.now(ZoneInfo("Europe/Budapest"))
-          hour = now.hour
-          today = now.date().isoformat()
           messages = telegram_messages()
 
           if not messages:
