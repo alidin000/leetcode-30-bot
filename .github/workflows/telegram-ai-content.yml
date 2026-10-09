@@ -8,11 +8,15 @@ on:
       timezone: "Europe/Budapest"
   workflow_dispatch:
     inputs:
-      test_message:
-        description: "Send the AI content immediately for testing"
-        required: false
-        default: false
-        type: boolean
+      mode:
+        description: "Send this AI content immediately"
+        required: true
+        default: "morning"
+        type: choice
+        options:
+          - morning
+          - evening
+          - test
 
 permissions:
   contents: read
@@ -29,8 +33,9 @@ jobs:
       - name: Send scheduled Telegram content
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TEST_MESSAGE: ${{ inputs.test_message }}
+          MANUAL_MODE: ${{ inputs.mode }}
           SCHEDULE: ${{ github.event.schedule }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           python - <<'PY'
           import html
@@ -70,19 +75,19 @@ jobs:
 
           schedule = os.environ.get("SCHEDULE", "").strip()
 
-          if schedule == "5 8 * * *":
+          if os.environ.get("EVENT_NAME") == "workflow_dispatch":
+              scheduled_mode = os.environ.get("MANUAL_MODE", "morning").strip().lower()
+          elif schedule == "5 8 * * *":
               scheduled_mode = "morning"
           elif schedule == "5 19 * * *":
               scheduled_mode = "evening"
-          elif os.environ.get("TEST_MESSAGE", "").lower() == "true":
-              scheduled_mode = "test"
           else:
               scheduled_mode = None
 
           now = datetime.now(ZoneInfo("Europe/Budapest"))
           today = now.date().isoformat()
 
-          if scheduled_mode is None:
+          if scheduled_mode not in {"morning", "evening", "test"}:
               raise SystemExit(
                   f"Unknown AI schedule trigger {schedule!r}; refusing to send."
               )
