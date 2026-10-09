@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-09T21:24:23.628185+00:00",
+  "updated_at": "2026-10-09T21:24:40.331959+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -50,6 +50,13 @@
       "day": 3,
       "url": "https://leetcode.com/problems/container-with-most-water/submissions/2166753024",
       "submitted_at": "2026-10-08T21:13:19.889603+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 4,
+      "url": "https://leetcode.com/problems/3sum/submissions/2167682075/",
+      "submitted_at": "2026-10-09T21:24:35.985936+00:00"
     }
   ],
   "competition_submissions": [
@@ -140,6 +147,17 @@
       "points": 2,
       "url": "https://leetcode.com/problems/container-with-most-water/submissions/2166753024",
       "submitted_at": "2026-10-08T21:13:19.889603+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 4,
+      "problem_slug": "3sum",
+      "problem_title": "3Sum",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/3sum/submissions/2167682075/",
+      "submitted_at": "2026-10-09T21:24:35.985936+00:00"
     }
   ]
 }
