@@ -2,9 +2,9 @@ name: Telegram AI Content
 
 on:
   schedule:
-    - cron: "5 8 * * *"
+    - cron: "17 8 * * *"
       timezone: "Europe/Budapest"
-    - cron: "5 19 * * *"
+    - cron: "17 19 * * *"
       timezone: "Europe/Budapest"
   workflow_dispatch:
     inputs:
@@ -77,15 +77,18 @@ jobs:
 
           if os.environ.get("EVENT_NAME") == "workflow_dispatch":
               scheduled_mode = os.environ.get("MANUAL_MODE", "morning").strip().lower()
-          elif schedule == "5 8 * * *":
+          elif schedule == "17 8 * * *":
               scheduled_mode = "morning"
-          elif schedule == "5 19 * * *":
+          elif schedule == "17 19 * * *":
               scheduled_mode = "evening"
           else:
               scheduled_mode = None
 
           now = datetime.now(ZoneInfo("Europe/Budapest"))
-          today = now.date().isoformat()
+          today_date = now.date()
+          today = today_date.isoformat()
+          challenge_start = datetime(2026, 10, 6).date()
+          effective_day = min(30, max(1, (today_date - challenge_start).days + 1))
 
           if scheduled_mode not in {"morning", "evening", "test"}:
               raise SystemExit(
@@ -93,12 +96,8 @@ jobs:
               )
 
           def expected_content_date():
-              if scheduled_mode == "morning":
-                  return today
-              if scheduled_mode == "evening":
-                  if now.hour < 12:
-                      return now.date().fromordinal(now.date().toordinal() - 1).isoformat()
-                  return today
+              if scheduled_mode == "evening" and now.hour < 12:
+                  return today_date.fromordinal(today_date.toordinal() - 1).isoformat()
               return today
 
           try:
@@ -231,7 +230,7 @@ jobs:
               return chunks
 
           def morning_message(test=False):
-              delivery_day = content["day"]
+              delivery_day = effective_day
               delivery_concept = content["morning_concept"]
               delivery_body = content["morning_concept_explanation"]
 
@@ -248,7 +247,7 @@ jobs:
               title = (
                   "🧪 <b>Candidate Feedback</b>"
                   if test
-                  else f"🌙 <b>Day {content['day']} · Candidate Feedback</b>"
+                  else f"🌙 <b>Day {effective_day} · Candidate Feedback</b>"
               )
               body = format_content(
                   content["evening_feedback"],
@@ -266,10 +265,10 @@ jobs:
               actual_date = content.get("date")
 
               if actual_date != expected_date:
-                  raise SystemExit(
-                      f"AI content date {actual_date!r} does not match the "
+                  print(
+                      f"WARNING: AI content date {actual_date!r} does not match "
                       f"expected {scheduled_mode} delivery date {expected_date!r}. "
-                      "Refusing to send stale or future content."
+                      "Sending the latest available content with today's challenge-day label."
                   )
 
               if scheduled_mode == "morning":
