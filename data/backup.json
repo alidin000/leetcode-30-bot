@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-09T21:43:38.944406+00:00",
+  "updated_at": "2026-10-09T21:43:48.043173+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -57,6 +57,13 @@
       "day": 4,
       "url": "https://leetcode.com/problems/3sum/submissions/2167682075/",
       "submitted_at": "2026-10-09T21:24:35.985936+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 4,
+      "url": "https://leetcode.com/problems/minimum-difference-between-highest-and-lowest-of-k-scores/submissions/2167687074",
+      "submitted_at": "2026-10-09T21:43:44.741783+00:00"
     }
   ],
   "competition_submissions": [
@@ -158,6 +165,17 @@
       "points": 2,
       "url": "https://leetcode.com/problems/3sum/submissions/2167682075/",
       "submitted_at": "2026-10-09T21:24:35.985936+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 4,
+      "problem_slug": "minimum-difference-between-highest-and-lowest-of-k-scores",
+      "problem_title": "Minimum Difference Between Highest And Lowest Of K Scores",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/minimum-difference-between-highest-and-lowest-of-k-scores/submissions/2167687074",
+      "submitted_at": "2026-10-09T21:43:44.741783+00:00"
     }
   ]
 }
