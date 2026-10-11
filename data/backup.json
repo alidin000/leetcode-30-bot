@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-11T09:07:52.687371+00:00",
+  "updated_at": "2026-10-11T09:08:14.363132+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -64,6 +64,13 @@
       "day": 4,
       "url": "https://leetcode.com/problems/minimum-difference-between-highest-and-lowest-of-k-scores/submissions/2167687074",
       "submitted_at": "2026-10-09T21:43:44.741783+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 6,
+      "url": "https://leetcode.com/problems/coin-change-ii/submissions/2169105938",
+      "submitted_at": "2026-10-11T09:08:05.285003+00:00"
     }
   ],
   "competition_submissions": [
@@ -176,6 +183,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/minimum-difference-between-highest-and-lowest-of-k-scores/submissions/2167687074",
       "submitted_at": "2026-10-09T21:43:44.741783+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 6,
+      "problem_slug": "coin-change-ii",
+      "problem_title": "Coin Change Ii",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/coin-change-ii/submissions/2169105938",
+      "submitted_at": "2026-10-11T09:08:05.285003+00:00"
     }
   ]
 }
