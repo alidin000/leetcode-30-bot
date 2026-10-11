@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-11T22:36:30.793445+00:00",
+  "updated_at": "2026-10-11T22:36:38.213722+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -71,6 +71,13 @@
       "day": 6,
       "url": "https://leetcode.com/problems/coin-change-ii/submissions/2169105938",
       "submitted_at": "2026-10-11T09:08:05.285003+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 7,
+      "url": "https://leetcode.com/problems/sort-colors/submissions/2169694273/",
+      "submitted_at": "2026-10-11T22:36:35.493572+00:00"
     }
   ],
   "competition_submissions": [
@@ -205,6 +212,17 @@
       "points": 2,
       "url": "https://leetcode.com/problems/combination-sum-iv/submissions/2169114482",
       "submitted_at": "2026-10-11T09:20:44.792313+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 7,
+      "problem_slug": "sort-colors",
+      "problem_title": "Sort Colors",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/sort-colors/submissions/2169694273/",
+      "submitted_at": "2026-10-11T22:36:35.493572+00:00"
     }
   ]
 }
