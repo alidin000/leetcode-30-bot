@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-11T09:08:14.363132+00:00",
+  "updated_at": "2026-10-11T09:20:47.167594+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -194,6 +194,17 @@
       "points": 2,
       "url": "https://leetcode.com/problems/coin-change-ii/submissions/2169105938",
       "submitted_at": "2026-10-11T09:08:05.285003+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 6,
+      "problem_slug": "combination-sum-iv",
+      "problem_title": "Combination Sum Iv",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/combination-sum-iv/submissions/2169114482",
+      "submitted_at": "2026-10-11T09:20:44.792313+00:00"
     }
   ]
 }
