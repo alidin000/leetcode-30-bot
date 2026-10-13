@@ -171,7 +171,7 @@ def fetch_problem_metadata(problem_slug):
         headers={
             "Content-Type": "application/json",
             "User-Agent": "leetcode-30-bot/2.0",
-            "Referer": f"https://leetcode.com/problems/{problem_slug}/",
+            "Referer": f"https://leetcode.com/problems/{raw_slug}/",
         },
     )
 
