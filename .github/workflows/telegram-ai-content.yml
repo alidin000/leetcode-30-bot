@@ -195,7 +195,7 @@ jobs:
               text = str(raw).strip()
               # Recover AI JSON fields that accidentally contain literal \\n sequences
               # instead of actual line breaks, so Telegram never displays "\\n".
-              text = text.replace("\\\\n", "\\n")
+              text = text.replace("\\n", "\n")
               if drop_first_heading:
                   lines = text.splitlines()
                   if lines and lines[0].strip().lower() == drop_first_heading.lower():
