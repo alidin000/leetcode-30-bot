@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-13T20:36:17.964505+00:00",
+  "updated_at": "2026-10-13T20:36:30.937641+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -98,6 +98,13 @@
       "day": 8,
       "url": "https://neetcode.io/problems/validate-parentheses/history",
       "submitted_at": "2026-10-13T20:10:44.154776+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 8,
+      "url": "https://leetcode.com/problems/squares-of-a-sorted-array/submissions/2171588363/",
+      "submitted_at": "2026-10-13T20:36:28.111053+00:00"
     }
   ],
   "competition_submissions": [
@@ -276,6 +283,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/validate-parentheses/history",
       "submitted_at": "2026-10-13T20:10:44.154776+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 8,
+      "problem_slug": "leetcode:squares-of-a-sorted-array",
+      "problem_title": "Leetcode:Squares Of A Sorted Array",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/squares-of-a-sorted-array/submissions/2171588363/",
+      "submitted_at": "2026-10-13T20:36:28.111053+00:00"
     }
   ]
 }
