@@ -85,6 +85,14 @@ LEETCODE_URL = re.compile(
     r")",
     re.I,
 )
+NEETCODE_URL = re.compile(
+    r"https?://(?:www\.)?neetcode\.io/problems/[^/?#\s)]+(?:/[^\s?#)]*)?",
+    re.I,
+)
+SUBMISSION_URL = re.compile(
+    rf"(?:{LEETCODE_URL.pattern})|(?:{NEETCODE_URL.pattern})",
+    re.I,
+)
 
 
 def db():
@@ -442,26 +450,67 @@ def challenge_message(day):
     )
 
 
-def extract_problem_slug(url):
+def extract_problem_identity(url):
+    """Return a platform-namespaced problem identity, so cross-platform solves are distinct."""
     try:
-        path_parts = [part for part in urlparse(url).path.split("/") if part]
+        parsed = urlparse(url)
+        path_parts = [part for part in parsed.path.split("/") if part]
     except ValueError:
+        return None, None
+
+    host = (parsed.hostname or "").lower()
+    if host in {"leetcode.com", "www.leetcode.com"}:
+        if "problems" in path_parts:
+            index = path_parts.index("problems")
+            if index + 1 >= len(path_parts) or "submissions" not in path_parts[index + 2:]:
+                return None, None
+            return "leetcode", path_parts[index + 1].strip().lower()
+        return None, None
+
+    if host in {"neetcode.io", "www.neetcode.io"}:
+        if len(path_parts) >= 2 and path_parts[0] == "problems":
+            return "neetcode", path_parts[1].strip().lower()
+        return None, None
+
+    return None, None
+
+
+def extract_problem_slug(url):
+    """Compatibility helper; callers that need duplicate separation should use identity."""
+    platform, slug = extract_problem_identity(url)
+    return f"{platform}:{slug}" if platform and slug else None
+
+
+def lookup_neetcode_metadata(problem_slug):
+    """Try public NeetCode problem page metadata; return None to ask for difficulty manually."""
+    page_url = f"https://neetcode.io/problems/{problem_slug}/question"
+    request = Request(page_url, headers={"User-Agent": "Mozilla/5.0"})
+    try:
+        with urlopen(request, timeout=15) as response:
+            page = response.read().decode("utf-8", errors="replace")
+    except (HTTPError, URLError, TimeoutError):
+        logging.warning("Could not read NeetCode metadata for %s", problem_slug)
         return None
 
-    if "problems" not in path_parts:
+    title_match = re.search(r"<title[^>]*>(.*?)</title>", page, re.I | re.S)
+    title = html.unescape(re.sub(r"\s+", " ", title_match.group(1))).strip() if title_match else ""
+    title = re.sub(r"\s*[-|·]\s*NeetCode.*$", "", title, flags=re.I).strip()
+    difficulty_match = re.search(r"\b(Easy|Medium|Hard)\b", page, re.I)
+    if not title or not difficulty_match:
         return None
 
-    index = path_parts.index("problems")
-    if index + 1 >= len(path_parts):
+    difficulty = difficulty_match.group(1).upper()
+    if difficulty not in POINTS_BY_DIFFICULTY:
         return None
-
-    slug = path_parts[index + 1].strip().lower()
-    if not slug or "submissions" not in path_parts[index + 2:]:
-        return None
-    return slug
+    return {"title": title, "difficulty": difficulty, "points": POINTS_BY_DIFFICULTY[difficulty]}
 
 
 def lookup_problem_metadata(problem_slug):
+    platform, raw_slug = problem_slug.split(":", 1) if ":" in problem_slug else ("leetcode", problem_slug)
+    if platform == "neetcode":
+        return lookup_neetcode_metadata(raw_slug)
+
+    problem_slug = raw_slug
     conn = db()
     cached = conn.execute(
         "SELECT problem_title, difficulty, points FROM problem_metadata WHERE problem_slug=?",
@@ -827,15 +876,16 @@ async def record_submission(update: Update, url: str, context: ContextTypes.DEFA
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
     day = current_day()
-    problem_slug = extract_problem_slug(url)
+    platform, raw_slug = extract_problem_identity(url)
+    problem_slug = f"{platform}:{raw_slug}" if platform and raw_slug else None
 
     if not problem_slug:
         await update.effective_message.reply_text(
             "❌ I need a problem-specific submission link so I can identify the problem.\n\n"
-            "Use a link like:\n"
-            "https://leetcode.com/problems/two-sum/submissions/123456789/\n\n"
-            "Generic /submissions/detail/... links do not contain enough public information for "
-            "duplicate detection and competition scoring."
+            "Use a problem-specific link like one of these:\n"
+            "https://leetcode.com/problems/two-sum/submissions/123456789/\n"
+            "https://neetcode.io/problems/two-sum/question\n\n"
+            "NeetCode links may ask you to choose the difficulty if it cannot be read automatically."
         )
         return
 
@@ -865,7 +915,7 @@ async def record_submission(update: Update, url: str, context: ContextTypes.DEFA
         await update.effective_message.reply_text(
             "⚠️ I couldn't retrieve this problem's difficulty automatically.\n\n"
             f"<b>{html.escape(pending_map[token]['problem_title'])}</b>\n"
-            "Choose the LeetCode difficulty below. Your choice will be used for scoring.",
+            f"Choose the {platform.title()} difficulty below. Your choice will be used for scoring.",
             parse_mode="HTML",
             reply_markup=keyboard,
         )
@@ -985,13 +1035,14 @@ async def submit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(update)
     if not context.args:
         await update.effective_message.reply_text(
-            "Send your LeetCode submission link like:\n"
-            "/submit https://leetcode.com/problems/two-sum/submissions/123456789/"
+            "Send a problem link from LeetCode or NeetCode, for example:\n"
+            "/submit https://leetcode.com/problems/two-sum/submissions/123456789/\n"
+            "/submit https://neetcode.io/problems/two-sum/question"
         )
         return
-    match = LEETCODE_URL.search(context.args[0])
+    match = SUBMISSION_URL.search(context.args[0])
     if not match:
-        await update.effective_message.reply_text("❌ That doesn't look like a LeetCode submission link.")
+        await update.effective_message.reply_text("❌ That doesn't look like a supported LeetCode or NeetCode problem link.")
         return
     await record_submission(update, match.group(0), context)
 
@@ -999,7 +1050,7 @@ async def submit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def submission(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.effective_message or not update.effective_message.text:
         return
-    match = LEETCODE_URL.search(update.effective_message.text)
+    match = SUBMISSION_URL.search(update.effective_message.text)
     if not match:
         return
     register_user(update)
