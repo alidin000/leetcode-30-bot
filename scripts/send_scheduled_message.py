@@ -125,15 +125,44 @@ _metadata_cache = {}
 
 def extract_problem_slug(url):
     match = re.search(r"https?://(?:www\.)?leetcode\.com/problems/([^/?\s]+)/submissions(?:/|$)", url, re.I)
-    return match.group(1).lower() if match else None
+    if match:
+        return "leetcode:" + match.group(1).lower()
+    match = re.search(r"https?://(?:www\.)?neetcode\.io/problems/([^/?#\s)]+)", url, re.I)
+    if match:
+        return "neetcode:" + match.group(1).lower()
+    return None
 
 def fetch_problem_metadata(problem_slug):
     if problem_slug in _metadata_cache:
         return _metadata_cache[problem_slug]
 
+    platform, raw_slug = problem_slug.split(":", 1) if ":" in problem_slug else ("leetcode", problem_slug)
+    if platform == "neetcode":
+        request = Request(
+            f"https://neetcode.io/problems/{raw_slug}/question",
+            headers={"User-Agent": "Mozilla/5.0"},
+        )
+        try:
+            with urlopen(request, timeout=15) as response:
+                page = response.read().decode("utf-8", errors="replace")
+        except (HTTPError, URLError, TimeoutError):
+            return None
+        title_match = re.search(r"<title[^>]*>(.*?)</title>", page, re.I | re.S)
+        title = html.unescape(re.sub(r"\s+", " ", title_match.group(1))).strip() if title_match else ""
+        title = re.sub(r"\s*[-|·]\s*NeetCode.*$", "", title, flags=re.I).strip()
+        difficulty_match = re.search(r"\b(Easy|Medium|Hard)\b", page, re.I)
+        if not title or not difficulty_match:
+            return None
+        difficulty = difficulty_match.group(1).upper()
+        if difficulty not in POINTS_BY_DIFFICULTY:
+            return None
+        metadata = {"title": title, "difficulty": difficulty, "points": POINTS_BY_DIFFICULTY[difficulty]}
+        _metadata_cache[problem_slug] = metadata
+        return metadata
+
     payload = json.dumps({
         "query": QUESTION_METADATA_QUERY,
-        "variables": {"titleSlug": problem_slug},
+        "variables": {"titleSlug": raw_slug},
     }).encode("utf-8")
     request = urllib.request.Request(
         LEETCODE_GRAPHQL_API,
