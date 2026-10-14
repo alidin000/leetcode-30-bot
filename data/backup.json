@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-14T16:57:13.125422+00:00",
+  "updated_at": "2026-10-14T16:58:01.880717+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -112,6 +112,13 @@
       "day": 9,
       "url": "https://leetcode.com/problems/construct-the-rectangle/submissions/2171622231/",
       "submitted_at": "2026-10-13T22:06:56.598529+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 9,
+      "url": "https://leetcode.com/problems/longest-substring-without-repeating-characters/submissions/2172304786/",
+      "submitted_at": "2026-10-14T16:57:22.440187+00:00"
     }
   ],
   "competition_submissions": [
@@ -312,6 +319,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/construct-the-rectangle/submissions/2171622231/",
       "submitted_at": "2026-10-13T22:06:56.598529+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 9,
+      "problem_slug": "leetcode:longest-substring-without-repeating-characters",
+      "problem_title": "Leetcode:Longest Substring Without Repeating Characters",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/longest-substring-without-repeating-characters/submissions/2172304786/",
+      "submitted_at": "2026-10-14T16:57:22.440187+00:00"
     }
   ]
 }
