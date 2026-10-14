@@ -130,7 +130,7 @@ jobs:
                       )
                   else:
                       blocks.append("<pre><code>" + escaped + "</code></pre>")
-                  return f"@@CODEBLOCK_{len(blocks)-1}@@"
+                  return f"@@CODEBLOCK{len(blocks)-1}@@"
 
               text = fence_re.sub(save_code, text)
 
@@ -138,7 +138,7 @@ jobs:
               inline_codes = []
               def save_inline(match):
                   inline_codes.append("<code>" + html.escape(match.group(1), quote=False) + "</code>")
-                  return f"@@INLINECODE_{len(inline_codes)-1}@@"
+                  return f"@@INLINECODE{len(inline_codes)-1}@@"
 
               text = re.sub(r"`([^\`\n]+)`", save_inline, text)
 
@@ -182,9 +182,9 @@ jobs:
 
               # Restore protected code blocks/inline code.
               for i, value in enumerate(blocks):
-                  text = text.replace(f"@@CODEBLOCK_{i}@@", value)
+                  text = text.replace(f"@@CODEBLOCK{i}@@", value)
               for i, value in enumerate(inline_codes):
-                  text = text.replace(f"@@INLINECODE_{i}@@", value)
+                  text = text.replace(f"@@INLINECODE{i}@@", value)
 
               # Telegram renders literal angle brackets poorly if left in text;
               # html.escape above already made ordinary text safe.
