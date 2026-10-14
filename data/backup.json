@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-14T20:25:46.589468+00:00",
+  "updated_at": "2026-10-14T20:25:56.219246+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -17,7 +17,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 6327136808,
-      "username": null,
+      "username": "alatarlajanu",
       "first_name": "Ala"
     }
   ],
@@ -119,6 +119,13 @@
       "day": 9,
       "url": "https://leetcode.com/problems/longest-substring-without-repeating-characters/submissions/2172304786/",
       "submitted_at": "2026-10-14T16:57:22.440187+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 9,
+      "url": "https://neetcode.io/problems/minimum-stack/history",
+      "submitted_at": "2026-10-14T20:25:56.005830+00:00"
     }
   ],
   "competition_submissions": [
@@ -341,6 +348,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/shuffle-string/submissions/2172451898",
       "submitted_at": "2026-10-14T19:02:57.970494+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 9,
+      "problem_slug": "neetcode:minimum-stack",
+      "problem_title": "Min Stack",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://neetcode.io/problems/minimum-stack/history",
+      "submitted_at": "2026-10-14T20:25:56.005830+00:00"
     }
   ]
 }
