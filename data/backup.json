@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-15T22:00:40.421402+00:00",
+  "updated_at": "2026-10-15T22:00:55.131873+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -140,6 +140,13 @@
       "day": 10,
       "url": "https://leetcode.com/problems/number-of-segments-in-a-string/submissions/2173397270",
       "submitted_at": "2026-10-15T21:30:04.721491+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 11,
+      "url": "https://leetcode.com/problems/max-consecutive-ones-iii/submissions/2173406116/",
+      "submitted_at": "2026-10-15T22:00:50.902146+00:00"
     }
   ],
   "competition_submissions": [
@@ -395,6 +402,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/number-of-segments-in-a-string/submissions/2173397270",
       "submitted_at": "2026-10-15T21:30:04.721491+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 11,
+      "problem_slug": "leetcode:max-consecutive-ones-iii",
+      "problem_title": "Leetcode:Max Consecutive Ones Iii",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/max-consecutive-ones-iii/submissions/2173406116/",
+      "submitted_at": "2026-10-15T22:00:50.902146+00:00"
     }
   ]
 }
