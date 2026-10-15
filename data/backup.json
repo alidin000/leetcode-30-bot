@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-15T21:29:55.036364+00:00",
+  "updated_at": "2026-10-15T21:30:20.518176+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -133,6 +133,13 @@
       "day": 10,
       "url": "https://neetcode.io/problems/evaluate-reverse-polish-notation/history",
       "submitted_at": "2026-10-15T20:16:50.716666+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 10,
+      "url": "https://leetcode.com/problems/number-of-segments-in-a-string/submissions/2173397270",
+      "submitted_at": "2026-10-15T21:30:04.721491+00:00"
     }
   ],
   "competition_submissions": [
@@ -377,6 +384,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/evaluate-reverse-polish-notation/history",
       "submitted_at": "2026-10-15T20:16:50.716666+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 10,
+      "problem_slug": "leetcode:number-of-segments-in-a-string",
+      "problem_title": "Leetcode:Number Of Segments In A String",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/number-of-segments-in-a-string/submissions/2173397270",
+      "submitted_at": "2026-10-15T21:30:04.721491+00:00"
     }
   ]
 }
