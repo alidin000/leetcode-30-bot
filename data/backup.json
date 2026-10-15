@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-15T20:16:43.623437+00:00",
+  "updated_at": "2026-10-15T20:16:51.231880+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -126,6 +126,13 @@
       "day": 9,
       "url": "https://neetcode.io/problems/minimum-stack/history",
       "submitted_at": "2026-10-14T20:25:56.005830+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 10,
+      "url": "https://neetcode.io/problems/evaluate-reverse-polish-notation/history",
+      "submitted_at": "2026-10-15T20:16:50.716666+00:00"
     }
   ],
   "competition_submissions": [
@@ -359,6 +366,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/minimum-stack/history",
       "submitted_at": "2026-10-14T20:25:56.005830+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 10,
+      "problem_slug": "neetcode:evaluate-reverse-polish-notation",
+      "problem_title": "Evaluate Reverse Polish Notation",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://neetcode.io/problems/evaluate-reverse-polish-notation/history",
+      "submitted_at": "2026-10-15T20:16:50.716666+00:00"
     }
   ]
 }
