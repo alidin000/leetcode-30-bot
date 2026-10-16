@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-16T21:26:17.127173+00:00",
+  "updated_at": "2026-10-16T21:26:25.366581+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -147,6 +147,13 @@
       "day": 11,
       "url": "https://leetcode.com/problems/max-consecutive-ones-iii/submissions/2173406116/",
       "submitted_at": "2026-10-15T22:00:50.902146+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 11,
+      "url": "https://neetcode.io/problems/binary-search/history",
+      "submitted_at": "2026-10-16T21:26:24.843787+00:00"
     }
   ],
   "competition_submissions": [
@@ -413,6 +420,17 @@
       "points": 2,
       "url": "https://leetcode.com/problems/max-consecutive-ones-iii/submissions/2173406116/",
       "submitted_at": "2026-10-15T22:00:50.902146+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 11,
+      "problem_slug": "neetcode:binary-search",
+      "problem_title": "Binary Search",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://neetcode.io/problems/binary-search/history",
+      "submitted_at": "2026-10-16T21:26:24.843787+00:00"
     }
   ]
 }
