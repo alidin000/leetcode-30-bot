@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-16T23:21:17.960924+00:00",
+  "updated_at": "2026-10-16T23:21:34.599210+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -154,6 +154,13 @@
       "day": 11,
       "url": "https://neetcode.io/problems/binary-search/history",
       "submitted_at": "2026-10-16T21:26:24.843787+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 12,
+      "url": "https://leetcode.com/problems/nim-game/submissions/2174195424",
+      "submitted_at": "2026-10-16T23:21:28.885677+00:00"
     }
   ],
   "competition_submissions": [
@@ -431,6 +438,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/binary-search/history",
       "submitted_at": "2026-10-16T21:26:24.843787+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 12,
+      "problem_slug": "leetcode:nim-game",
+      "problem_title": "Leetcode:Nim Game",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/nim-game/submissions/2174195424",
+      "submitted_at": "2026-10-16T23:21:28.885677+00:00"
     }
   ]
 }
