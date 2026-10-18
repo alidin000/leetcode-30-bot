@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-18T21:01:20.407423+00:00",
+  "updated_at": "2026-10-18T21:01:26.470414+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -168,6 +168,13 @@
       "day": 12,
       "url": "https://neetcode.io/problems/car-fleet/history",
       "submitted_at": "2026-10-17T21:25:46.665903+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 13,
+      "url": "https://neetcode.io/problems/reverse-a-linked-list/history",
+      "submitted_at": "2026-10-18T21:01:26.264821+00:00"
     }
   ],
   "competition_submissions": [
@@ -467,6 +474,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/car-fleet/history",
       "submitted_at": "2026-10-17T21:25:46.665903+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 13,
+      "problem_slug": "neetcode:reverse-a-linked-list",
+      "problem_title": "Reverse Linked List",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://neetcode.io/problems/reverse-a-linked-list/history",
+      "submitted_at": "2026-10-18T21:01:26.264821+00:00"
     }
   ]
 }
