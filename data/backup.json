@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-19T16:12:13.165734+00:00",
+  "updated_at": "2026-10-19T16:12:18.632458+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -175,6 +175,13 @@
       "day": 13,
       "url": "https://neetcode.io/problems/reverse-a-linked-list/history",
       "submitted_at": "2026-10-18T21:01:26.264821+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 14,
+      "url": "https://neetcode.io/problems/daily-temperatures/history",
+      "submitted_at": "2026-10-19T16:12:18.156557+00:00"
     }
   ],
   "competition_submissions": [
@@ -485,6 +492,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/reverse-a-linked-list/history",
       "submitted_at": "2026-10-18T21:01:26.264821+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 14,
+      "problem_slug": "neetcode:daily-temperatures",
+      "problem_title": "Daily Temperatures",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://neetcode.io/problems/daily-temperatures/history",
+      "submitted_at": "2026-10-19T16:12:18.156557+00:00"
     }
   ]
 }
