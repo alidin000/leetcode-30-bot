@@ -670,7 +670,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/presubmit <link> — save a solved problem for a future travel day\n"
         "/presubmit — list your unused pre-submissions\n"
         "/usepresubmit — activate the oldest queued problem\n"
-        "/usepresubmit 2 — activate item 2 in the queue\n\n"
+        "\n"
         "PROGRESS & COMPETITION\n"
         "/progress — see your progress\n"
         "/track — show participation for the last 7 days\n"
@@ -1325,20 +1325,17 @@ async def presubmit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.effective_message.reply_text(
         f"📦 Pre-submission saved: {platform.title()} · {raw_slug.replace('-', ' ')}\n"
         f"Available pre-submissions: {count}\n{suffix}\n\n"
-        "Use /presubmit to view your queue and /usepresubmit when you need one."
+        "Use /presubmit to view your queue and /usepresubmit to activate the oldest item."
     )
 
 
 async def usepresubmit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await ensure_restored()
     register_user(update)
-    try:
-        position = int(context.args[0]) if context.args else 1
-    except ValueError:
-        await update.effective_message.reply_text("Usage: /usepresubmit [queue-number]")
-        return
-    if position < 1:
-        await update.effective_message.reply_text("Choose a queue number of 1 or higher.")
+    if context.args:
+        await update.effective_message.reply_text(
+            "No need to choose a queue number. /usepresubmit always activates the oldest available item."
+        )
         return
 
     chat_id = update.effective_chat.id
@@ -1358,8 +1355,8 @@ async def usepresubmit(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     row = conn.execute(
         "SELECT id, url, problem_slug FROM presubmissions "
-        "WHERE chat_id=? AND user_id=? AND used_at IS NULL ORDER BY id LIMIT 1 OFFSET ?",
-        (chat_id, user_id, position - 1),
+        "WHERE chat_id=? AND user_id=? AND used_at IS NULL ORDER BY id LIMIT 1",
+        (chat_id, user_id),
     ).fetchone()
     if not row:
         conn.close()
