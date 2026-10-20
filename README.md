@@ -36,6 +36,7 @@ python bot.py
 - `/start`
 - `/today`
 - `/progress`
+- `/track` — show each participant's submitted and missed days for the last 7 challenge days (`/track 14` shows up to 14 days)
 - `/leaderboard`
 
 Send a LeetCode submission URL in the challenge group after solving a problem.
