@@ -480,22 +480,53 @@ def current_day():
 def normalize_submission_days():
     conn = db()
     changed = 0
-    for table in ("competition_submissions", "submissions"):
-        rows = conn.execute(f"SELECT id, submitted_at FROM {table}").fetchall()
-        for submission_id, submitted_at in rows:
-            try:
-                submitted_date = datetime.fromisoformat(submitted_at).astimezone(timezone.utc).date()
-            except (TypeError, ValueError):
-                continue
-            calculated_day = min(30, max(1, (submitted_date - START_DATE).days + 1))
-            current = conn.execute(f"SELECT day FROM {table} WHERE id=?", (submission_id,)).fetchone()
-            if current and current[0] != calculated_day:
-                conn.execute(f"UPDATE {table} SET day=? WHERE id=?", (calculated_day, submission_id))
-                changed += 1
+
+    competition_rows = conn.execute(
+        "SELECT id, submitted_at, day FROM competition_submissions ORDER BY id"
+    ).fetchall()
+    for submission_id, submitted_at, current_day in competition_rows:
+        try:
+            submitted_date = datetime.fromisoformat(submitted_at).astimezone(timezone.utc).date()
+        except (TypeError, ValueError):
+            continue
+        calculated_day = min(30, max(1, (submitted_date - START_DATE).days + 1))
+        if current_day != calculated_day:
+            conn.execute(
+                "UPDATE competition_submissions SET day=? WHERE id=?",
+                (calculated_day, submission_id),
+            )
+            changed += 1
+
+    legacy_rows = conn.execute(
+        "SELECT id, chat_id, user_id, submitted_at, day FROM submissions ORDER BY id"
+    ).fetchall()
+    keep_by_day = {}
+    for submission_id, chat_id, user_id, submitted_at, current_day in legacy_rows:
+        try:
+            submitted_date = datetime.fromisoformat(submitted_at).astimezone(timezone.utc).date()
+        except (TypeError, ValueError):
+            continue
+        calculated_day = min(30, max(1, (submitted_date - START_DATE).days + 1))
+        key = (chat_id, user_id, calculated_day)
+        if key in keep_by_day:
+            conn.execute("DELETE FROM submissions WHERE id=?", (submission_id,))
+            changed += 1
+            continue
+        keep_by_day[key] = submission_id
+        if current_day != calculated_day:
+            conn.execute(
+                "UPDATE submissions SET day=? WHERE id=?",
+                (calculated_day, submission_id),
+            )
+            changed += 1
+
     conn.commit()
     conn.close()
     if changed:
-        logging.info("Normalized %s submission day assignments to UTC.", changed)
+        logging.info(
+            "Normalized submission days and resolved %s row changes/duplicates.",
+            changed,
+        )
 
 def challenge_message(day):
     name, url = challenge(day)
