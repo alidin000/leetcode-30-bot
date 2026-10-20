@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-20T15:33:28.818210+00:00",
+  "updated_at": "2026-10-20T15:33:37.251088+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -234,6 +234,13 @@
       "day": 2,
       "url": "https://leetcode.com/problems/middle-of-the-linked-list/submissions/2165745888/",
       "submitted_at": "2026-10-07T21:02:01.405919+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 15,
+      "url": "https://neetcode.io/problems/merge-two-sorted-linked-lists/history",
+      "submitted_at": "2026-10-20T15:33:36.998603+00:00"
     }
   ],
   "competition_submissions": [
@@ -687,6 +694,17 @@
       "points": 2,
       "url": "https://leetcode.com/problems/remove-duplicates-from-sorted-array-ii/submissions/2170139928/",
       "submitted_at": "2026-10-12T11:45:09.788750+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 15,
+      "problem_slug": "neetcode:merge-two-sorted-linked-lists",
+      "problem_title": "Merge Two Sorted Linked Lists",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://neetcode.io/problems/merge-two-sorted-linked-lists/history",
+      "submitted_at": "2026-10-20T15:33:36.998603+00:00"
     }
   ],
   "presubmissions": [
