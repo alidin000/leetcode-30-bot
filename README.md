@@ -85,7 +85,6 @@ Run `/help` in the Telegram group for the in-bot manual.
 | `/presubmit <link>` | Queue a solved problem for a future day |
 | `/presubmit` | List unused queued problems |
 | `/usepresubmit` | Activate the oldest queued problem |
-| `/usepresubmit 2` | Activate queue item 2 |
 | `/progress` | Show progress |
 | `/track [7–14]` | Show recent daily participation |
 | `/leaderboard` | Show competition scores |
