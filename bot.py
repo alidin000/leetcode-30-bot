@@ -1155,7 +1155,7 @@ async def presubmit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(update)
     if not context.args:
         await update.effective_message.reply_text(
-            "Usage: /presubmit <problem-link>\nSave a LeetCode or NeetCode problem for a future travel day."
+            "Usage: /presubmit <submission-link>\nSave a LeetCode submission link or NeetCode problem link for a future travel day."
         )
         return
 
