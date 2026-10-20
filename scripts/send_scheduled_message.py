@@ -5,9 +5,8 @@ import re
 import subprocess
 import urllib.parse
 import urllib.request
-from datetime import datetime
+from datetime import datetime, timezone
 from urllib.error import HTTPError, URLError
-from zoneinfo import ZoneInfo
 
 TIMEZONE = timezone.utc
 START_DATE = datetime.fromisoformat("2026-10-06").date()
