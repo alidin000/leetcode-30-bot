@@ -1227,10 +1227,40 @@ async def presubmit(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.effective_message.reply_text("I couldn't identify that problem. Please send a problem-specific link.")
         return
 
+    problem_slug = f"{platform}:{raw_slug}"
     conn = db()
+
+    pending_duplicate = conn.execute(
+        "SELECT id, used_at FROM presubmissions "
+        "WHERE chat_id=? AND user_id=? AND problem_slug=? "
+        "ORDER BY id DESC LIMIT 1",
+        (update.effective_chat.id, update.effective_user.id, problem_slug),
+    ).fetchone()
+    solved_duplicate = conn.execute(
+        "SELECT 1 FROM competition_submissions "
+        "WHERE chat_id=? AND user_id=? AND problem_slug=? LIMIT 1",
+        (update.effective_chat.id, update.effective_user.id, problem_slug),
+    ).fetchone()
+
+    if pending_duplicate and pending_duplicate[1] is None:
+        conn.close()
+        await update.effective_message.reply_text(
+            f"⚠️ You already have {platform.title()} · {raw_slug.replace('-', ' ')} in your unused pre-submission queue. "
+            "I didn't add it again. Use /presubmits to view your queue."
+        )
+        return
+
+    if solved_duplicate:
+        conn.close()
+        await update.effective_message.reply_text(
+            f"⚠️ You've already submitted {platform.title()} · {raw_slug.replace('-', ' ')} during the competition. "
+            "I didn't add it to your pre-submission queue because it won't score again."
+        )
+        return
+
     conn.execute(
         "INSERT INTO presubmissions(chat_id,user_id,url,problem_slug,created_at) VALUES(?,?,?,?,?)",
-        (update.effective_chat.id, update.effective_user.id, url, f"{platform}:{raw_slug}", datetime.now(timezone.utc).isoformat()),
+        (update.effective_chat.id, update.effective_user.id, url, problem_slug, datetime.now(timezone.utc).isoformat()),
     )
     count = conn.execute(
         "SELECT COUNT(*) FROM presubmissions WHERE chat_id=? AND user_id=? AND used_at IS NULL",
