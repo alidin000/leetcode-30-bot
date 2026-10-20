@@ -74,10 +74,9 @@ def scheduled_day(selected_mode):
     now = datetime.now(TIMEZONE)
     reference_date = now.date()
 
-    if selected_mode == "evening":
-        # Evening results belong to the calendar day that just ended if the
-        # scheduled GitHub Actions run is delayed past midnight.
-        if now.hour < 12:
+    if selected_mode in {"evening", "penalty"}:
+        # These reports refer to the UTC challenge day that just ended.
+        if selected_mode == "penalty" or now.hour < 12:
             reference_date = reference_date.fromordinal(reference_date.toordinal() - 1)
 
     return min(30, max(1, (reference_date - START_DATE).days + 1))
@@ -118,7 +117,11 @@ def mode():
     if manual:
         return manual
     schedule = os.environ.get("SCHEDULE", "")
-    return "morning" if schedule.startswith("0 9") else "evening"
+    if schedule.startswith("0 9"):
+        return "morning"
+    if schedule.startswith("10 0"):
+        return "penalty"
+    return "evening"
 
 _metadata_cache = {}
 
@@ -362,6 +365,61 @@ def evening_text(day, entries, users, chat_id):
         "🚫 Duplicate problems are ignored for scoring.",
     ]
     return "\n".join(lines)
+def penalty_text(day, users, backup, chat_id):
+    participation = {
+        (str(row.get("chat_id")), str(row.get("user_id")), int(row.get("day", 0)))
+        for row in backup.get("submissions", [])
+        if row.get("chat_id") is not None and row.get("user_id") is not None
+    }
+    participants = [row for row in users if str(row.get("chat_id")) == str(chat_id)]
+    registered = [row for row in participants if row.get("revolut_username")]
+    missing_registration = [row for row in participants if not row.get("revolut_username")]
+    missed = [
+        row for row in registered
+        if (str(chat_id), str(row.get("user_id")), day) not in participation
+    ]
+    lines = [
+        f"💶 <b>Day {day}/30 — Penalty report</b>",
+        "",
+        "Rule: missing the day means sending €1 to every other registered participant.",
+        "",
+    ]
+    if missing_registration:
+        names = [
+            f"@{row['username']}" if row.get("username") else (row.get("first_name") or "participant")
+            for row in missing_registration
+        ]
+        lines.extend([
+            "⚠️ <b>Revolut registration missing</b>",
+            html.escape(", ".join(names)),
+            "These participants are excluded from transfers until they register with /revolut <username>.",
+            "",
+        ])
+    if not registered:
+        lines.append("No participants have registered Revolut usernames yet. Ask everyone to use /revolut <username>.")
+        return "\n".join(lines)
+    if not missed:
+        lines.append("✅ No registered participant missed this day. No penalties.")
+        return "\n".join(lines)
+
+    lines.append("❌ <b>Missed the challenge</b>")
+    for payer in missed:
+        payer_name = f"@{payer['username']}" if payer.get("username") else (payer.get("first_name") or "participant")
+        payer_revolut = payer["revolut_username"]
+        recipients = [row for row in registered if row.get("user_id") != payer.get("user_id")]
+        total = len(recipients)
+        lines.append("")
+        lines.append(f"• <b>{html.escape(payer_name)}</b> (@{html.escape(payer_revolut)}) missed Day {day}.")
+        if not recipients:
+            lines.append("No other registered recipients.")
+            continue
+        lines.append(f"Must send €1 to each of {total} participant{'s' if total != 1 else ''}:")
+        for recipient in recipients:
+            lines.append(f"  • @{html.escape(recipient['revolut_username'])}")
+        lines.append(f"<b>Total owed: €{total}</b>")
+    return "\n".join(lines)
+
+
 def main():
     backup = load_backup()
     users = backup.get("users", [])
@@ -373,12 +431,14 @@ def main():
     if selected_mode == "morning":
         message = morning_text(day)
         for chat_id in chats:
-            # Keep the morning announcement useful even when everybody has already submitted.
             send_telegram(chat_id, message)
         return
 
     for chat_id in chats:
-        message = evening_text(day, entries, users, chat_id)
+        if selected_mode == "penalty":
+            message = penalty_text(day, users, backup, chat_id)
+        else:
+            message = evening_text(day, entries, users, chat_id)
         send_telegram(chat_id, message)
 
 if __name__ == "__main__":
