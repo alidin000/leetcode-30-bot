@@ -629,7 +629,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🏆 Welcome to LeetCode 30!\n\n"
         "Use /today for today's problem.\n"
         "Send your LeetCode submission link after solving.\n"
-        "Use /progress or /leaderboard to see the challenge."
+        "Use /progress or /leaderboard to see the challenge.\n"
+        "Use /track to see who submitted each day this week."
     )
 
 
@@ -646,6 +647,93 @@ async def random_problem(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.effective_message.reply_text(
         f"🎲 Random LeetCode problem\n\n{name}\n{url}"
     )
+
+async def track(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await ensure_restored()
+    register_user(update)
+
+    try:
+        requested_days = int(context.args[0]) if context.args else 7
+    except ValueError:
+        await update.effective_message.reply_text("Usage: /track [days] — e.g. /track or /track 7")
+        return
+
+    if not 1 <= requested_days <= 14:
+        await update.effective_message.reply_text("Choose a range from 1 to 14 days. Example: /track 7")
+        return
+
+    chat_id = update.effective_chat.id
+    today = current_day()
+    first_day = max(1, today - requested_days + 1)
+    actual_days = today - first_day + 1
+    dates = {
+        day: (START_DATE.fromordinal(START_DATE.toordinal() + day - 1))
+        for day in range(first_day, today + 1)
+    }
+
+    conn = db()
+    users = conn.execute(
+        "SELECT user_id, first_name, username FROM users WHERE chat_id=? ORDER BY first_name",
+        (chat_id,),
+    ).fetchall()
+    submitted_rows = conn.execute(
+        """
+        SELECT DISTINCT user_id, day
+        FROM competition_submissions
+        WHERE chat_id=? AND day BETWEEN ? AND ?
+        """,
+        (chat_id, first_day, today),
+    ).fetchall()
+    conn.close()
+
+    submitted = {}
+    for user_id, day in submitted_rows:
+        submitted.setdefault(user_id, set()).add(day)
+
+    completed_days = [day for day in dates if day < today]
+    header_start = dates[first_day].strftime("%d %b")
+    header_end = dates[today].strftime("%d %b")
+    lines = [
+        f"📊 Submission tracker — last {actual_days} challenge days",
+        f"D{first_day}–D{today} · {header_start}–{header_end}",
+        "✅ submitted · ❌ missed · ⏳ today still in progress",
+        "",
+    ]
+
+    if not users:
+        lines.append("No participants registered yet. Ask everyone to send /start.")
+    else:
+        for user_id, first_name, username in users:
+            display = f"@{username}" if username else (first_name or f"User {user_id}")
+            user_days = submitted.get(user_id, set())
+            done = [day for day in completed_days if day in user_days]
+            missed = [day for day in completed_days if day not in user_days]
+            today_status = "✅" if today in user_days else "⏳"
+            done_label = ", ".join(f"D{day}" for day in done) or "none"
+            missed_label = ", ".join(f"D{day}" for day in missed) or "none"
+            lines.append(
+                f"{display}\n"
+                f"  ✅ Submitted: {done_label}\n"
+                f"  ❌ Missed: {missed_label}\n"
+                f"  {today_status} Today (D{today}): "
+                f"{'submitted' if today in user_days else 'pending'}"
+            )
+
+    messages = []
+    current = ""
+    for line in lines:
+        candidate = line if not current else current + "\n" + line
+        if len(candidate) > 3800 and current:
+            messages.append(current)
+            current = line
+        else:
+            current = candidate
+    if current:
+        messages.append(current)
+
+    for message in messages:
+        await update.effective_message.reply_text(message)
+
 
 async def progress(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await ensure_restored()
@@ -1167,6 +1255,7 @@ def main():
     app.add_handler(CallbackQueryHandler(difficulty_callback, pattern=r"^diff:"))
     app.add_handler(CommandHandler("testtag", test_tag))
     app.add_handler(CommandHandler("progress", progress))
+    app.add_handler(CommandHandler("track", track))
     app.add_handler(CommandHandler("leaderboard", leaderboard))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, submission))
 
