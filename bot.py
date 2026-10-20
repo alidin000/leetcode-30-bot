@@ -635,14 +635,21 @@ def lookup_problem_metadata(problem_slug):
         logging.exception("Failed to fetch LeetCode metadata for %s", problem_slug)
         return None
 
-    question = (body.get("data") or {}).get("question")
-    if not question or question.get("difficulty") not in POINTS_BY_DIFFICULTY:
-        logging.warning("No usable LeetCode metadata for %s: %s", problem_slug, body)
+    question = (body.get("data") or {}).get("question") or {}
+    title = question.get("title")
+    difficulty = str(question.get("difficulty") or "").strip().upper()
+
+    if not title or difficulty not in POINTS_BY_DIFFICULTY:
+        logging.warning(
+            "No usable LeetCode metadata for %s: title=%r difficulty=%r",
+            problem_slug,
+            title,
+            question.get("difficulty"),
+        )
         return None
 
-    difficulty = question["difficulty"]
+    title = str(title).strip()
     points = POINTS_BY_DIFFICULTY[difficulty]
-    title = question["title"]
 
     conn = db()
     conn.execute(
