@@ -104,9 +104,13 @@ def db():
             user_id INTEGER NOT NULL,
             username TEXT,
             first_name TEXT,
+            revolut_username TEXT,
             PRIMARY KEY (chat_id, user_id)
         )
     """)
+    user_columns = {row[1] for row in conn.execute("PRAGMA table_info(users)")}
+    if "revolut_username" not in user_columns:
+        conn.execute("ALTER TABLE users ADD COLUMN revolut_username TEXT")
     conn.execute("""
         CREATE TABLE IF NOT EXISTS submissions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -201,9 +205,10 @@ def backup_to_github():
             "user_id": row[1],
             "username": row[2],
             "first_name": row[3],
+            "revolut_username": row[4],
         }
         for row in conn.execute(
-            "SELECT chat_id, user_id, username, first_name FROM users"
+            "SELECT chat_id, user_id, username, first_name, revolut_username FROM users"
         ).fetchall()
     ]
     current_submissions = [
@@ -339,13 +344,19 @@ def restore_from_github():
 
     conn = db()
     conn.executemany(
-        "INSERT OR REPLACE INTO users(chat_id,user_id,username,first_name) VALUES(?,?,?,?)",
+        """INSERT INTO users(chat_id,user_id,username,first_name,revolut_username)
+        VALUES(?,?,?,?,?)
+        ON CONFLICT(chat_id,user_id) DO UPDATE SET
+            username=excluded.username,
+            first_name=excluded.first_name,
+            revolut_username=COALESCE(excluded.revolut_username, users.revolut_username)""",
         [
             (
                 row["chat_id"],
                 row["user_id"],
                 row.get("username"),
                 row.get("first_name"),
+                row.get("revolut_username"),
             )
             for row in backup.get("users", [])
         ],
@@ -421,7 +432,11 @@ def register_user(update):
     user = update.effective_user
     conn = db()
     conn.execute(
-        "INSERT OR REPLACE INTO users(chat_id,user_id,username,first_name) VALUES(?,?,?,?)",
+        """INSERT INTO users(chat_id,user_id,username,first_name)
+        VALUES(?,?,?,?)
+        ON CONFLICT(chat_id,user_id) DO UPDATE SET
+            username=excluded.username,
+            first_name=excluded.first_name""",
         (chat.id, user.id, user.username, user.first_name),
     )
     conn.commit()
@@ -649,8 +664,50 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Send your LeetCode submission link after solving.\n"
         "Use /progress or /leaderboard to see the challenge.\n"
         "Use /track to see who submitted each day this week.\n"
-        "Use /presubmit to save a solution for a future day, then /usepresubmit when needed."
+        "Use /presubmit to save a solution for a future day, then /usepresubmit when needed.\n"
+        "Register your Revolut username with /revolut <username> for penalty reports."
     )
+
+
+async def revolut(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await ensure_restored()
+    register_user(update)
+    if not context.args:
+        conn = db()
+        row = conn.execute(
+            "SELECT revolut_username FROM users WHERE chat_id=? AND user_id=?",
+            (update.effective_chat.id, update.effective_user.id),
+        ).fetchone()
+        conn.close()
+        current = row[0] if row else None
+        if current:
+            await update.effective_message.reply_text(
+                f"Your registered Revolut username is @{current}. To change it, use /revolut <username>."
+            )
+        else:
+            await update.effective_message.reply_text(
+                "Register your Revolut username with /revolut <username> — for example, /revolut emiliyiyqk."
+            )
+        return
+
+    username = context.args[0].strip().lstrip("@")
+    if not re.fullmatch(r"[A-Za-z0-9_.-]{3,50}", username):
+        await update.effective_message.reply_text(
+            "That username format doesn't look valid. Use /revolut <username>, without a link."
+        )
+        return
+
+    conn = db()
+    conn.execute(
+        "UPDATE users SET revolut_username=? WHERE chat_id=? AND user_id=?",
+        (username, update.effective_chat.id, update.effective_user.id),
+    )
+    conn.commit()
+    conn.close()
+    await update.effective_message.reply_text(
+        f"✅ Revolut username registered as @{html.escape(username)}. It will be used in daily penalty reports."
+    )
+    await asyncio.to_thread(backup_to_github)
 
 
 async def today(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1400,6 +1457,7 @@ def main():
     app = Application.builder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("revolut", revolut))
     app.add_handler(CommandHandler("today", today))
     app.add_handler(CommandHandler("random", random_problem))
     app.add_handler(CommandHandler("submit", submit_command))
