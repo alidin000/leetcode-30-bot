@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-20T12:17:40.922715+00:00",
+  "updated_at": "2026-10-20T12:21:23.734493+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -566,6 +566,16 @@
       "url": "https://leetcode.com/problems/nim-game/submissions/2174195424",
       "problem_slug": "leetcode:nim-game",
       "created_at": "2026-10-20T12:17:40.493162+00:00",
+      "used_at": null,
+      "used_day": null
+    },
+    {
+      "id": 2,
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "url": "https://leetcode.com/problems/nim-game/submissions/2174195424",
+      "problem_slug": "leetcode:nim-game",
+      "created_at": "2026-10-20T12:21:23.258504+00:00",
       "used_at": null,
       "used_day": null
     }
