@@ -141,6 +141,18 @@ def db():
             points INTEGER NOT NULL
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS presubmissions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            chat_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            url TEXT NOT NULL,
+            problem_slug TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            used_at TEXT,
+            used_day INTEGER
+        )
+    """)
     conn.commit()
     return conn
 
@@ -223,6 +235,10 @@ def backup_to_github():
             "FROM competition_submissions"
         ).fetchall()
     ]
+    current_presubmissions = [
+        {"id": row[0], "chat_id": row[1], "user_id": row[2], "url": row[3], "problem_slug": row[4], "created_at": row[5], "used_at": row[6], "used_day": row[7]}
+        for row in conn.execute("SELECT id, chat_id, user_id, url, problem_slug, created_at, used_at, used_day FROM presubmissions").fetchall()
+    ]
     conn.close()
 
     existing = github_request(
@@ -271,6 +287,10 @@ def backup_to_github():
             remote_backup.get("competition_submissions", []),
             current_competition_submissions,
             ("chat_id", "user_id", "problem_slug"),
+        ),
+        "presubmissions": merge_records(
+            remote_backup.get("presubmissions", []), current_presubmissions,
+            ("chat_id", "user_id", "id"),
         ),
     }
 
@@ -365,6 +385,12 @@ def restore_from_github():
             if row.get("problem_slug") and row.get("difficulty") and row.get("points") is not None
         ],
     )
+    conn.executemany(
+        """INSERT OR IGNORE INTO presubmissions(id,chat_id,user_id,url,problem_slug,created_at,used_at,used_day)
+        VALUES(?,?,?,?,?,?,?,?)""",
+        [(row.get("id"), row["chat_id"], row["user_id"], row["url"], row["problem_slug"], row["created_at"], row.get("used_at"), row.get("used_day"))
+         for row in backup.get("presubmissions", []) if row.get("url") and row.get("problem_slug") and row.get("created_at")],
+    )
     conn.commit()
     conn.close()
     logging.info(
@@ -408,7 +434,7 @@ def challenge(day):
 
 
 def current_day():
-    today = datetime.now(TIMEZONE).date()
+    today = datetime.now(timezone.utc).date()
     return min(30, max(1, (today - START_DATE).days + 1))
 
 
@@ -420,7 +446,7 @@ def normalize_submission_days():
     changed = 0
     for submission_id, submitted_at in rows:
         try:
-            submitted_date = datetime.fromisoformat(submitted_at).astimezone(TIMEZONE).date()
+            submitted_date = datetime.fromisoformat(submitted_at).astimezone(timezone.utc).date()
         except (TypeError, ValueError):
             continue
         calculated_day = min(30, max(1, (submitted_date - START_DATE).days + 1))
