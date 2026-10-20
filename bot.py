@@ -855,16 +855,28 @@ async def track(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ).fetchall()
     submitted_rows = conn.execute(
         """
-        SELECT DISTINCT user_id, day
+        SELECT user_id, url, submitted_at, day
         FROM submissions
-        WHERE chat_id=? AND day BETWEEN ? AND ?
+        WHERE chat_id=?
         """,
-        (chat_id, first_day, today),
+        (chat_id,),
     ).fetchall()
     conn.close()
 
     submitted = {}
-    for user_id, day in submitted_rows:
+    seen_submission_keys = set()
+    for user_id, url, submitted_at, stored_day in submitted_rows:
+        try:
+            submitted_date = datetime.fromisoformat(submitted_at).astimezone(timezone.utc).date()
+            day = min(30, max(1, (submitted_date - START_DATE).days + 1))
+        except (TypeError, ValueError):
+            day = stored_day
+        if not first_day <= day <= today:
+            continue
+        key = (user_id, url, day)
+        if key in seen_submission_keys:
+            continue
+        seen_submission_keys.add(key)
         submitted.setdefault(user_id, set()).add(day)
 
     completed_days = [day for day in dates if day < today]
