@@ -9,7 +9,7 @@ from datetime import datetime
 from urllib.error import HTTPError, URLError
 from zoneinfo import ZoneInfo
 
-TIMEZONE = ZoneInfo("Europe/Budapest")
+TIMEZONE = timezone.utc
 START_DATE = datetime.fromisoformat("2026-10-06").date()
 AI_FILE = "ai/daily_content.json"
 
@@ -62,7 +62,7 @@ CHALLENGES = [
 ]
 
 def current_day():
-    today = datetime.now(TIMEZONE).date()
+    today = datetime.now(timezone.utc).date()
     return min(30, max(1, (today - START_DATE).days + 1))
 
 
