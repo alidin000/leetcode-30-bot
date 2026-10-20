@@ -656,6 +656,35 @@ def backfill_competition_submissions():
         logging.info("Backfilled %s legacy submissions into competition scoring.", created)
 
 
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.effective_message.reply_text(
+        "📘 LeetCode 30 — Command Manual\n\n"
+        "REGISTRATION\n"
+        "/start — register yourself in this Telegram group\n"
+        "/revolut <username> — register or update your Revolut handle\n"
+        "/revolut — check your saved Revolut handle\n\n"
+        "DAILY CHALLENGE\n"
+        "/today — show today's challenge problem\n"
+        "/random — get a random practice problem\n"
+        "/submit <link> — submit a solved LeetCode/NeetCode problem\n"
+        "/presubmit <link> — save a solved problem for a future travel day\n"
+        "/presubmit — list your unused pre-submissions\n"
+        "/usepresubmit — activate the oldest queued problem\n"
+        "/usepresubmit 2 — activate item 2 in the queue\n\n"
+        "PROGRESS & COMPETITION\n"
+        "/progress — see your progress\n"
+        "/track — show participation for the last 7 days\n"
+        "/track 14 — show up to 14 days\n"
+        "/leaderboard — see competition scores\n\n"
+        "ADMIN / UTILITY\n"
+        "/backup — back up challenge data\n"
+        "/testtag — preview who would be reminded\n\n"
+        "Rules: Easy = 1 point, Medium = 2, Hard = 4. Each unique problem scores once. "
+        "Challenge-day boundaries follow UTC. Penalty reports list €1 transfers owed to every other registered participant; "
+        "the bot does not send money."
+    )
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(update)
     await update.effective_message.reply_text(
@@ -664,7 +693,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Send your LeetCode submission link after solving.\n"
         "Use /progress or /leaderboard to see the challenge.\n"
         "Use /track to see who submitted each day this week.\n"
-        "Use /presubmit to save a solution for a future day, then /usepresubmit when needed.\n"
+        "Use /presubmit <link> to queue a problem; /presubmit lists your queue; /usepresubmit activates one.\n"
         "Register your Revolut username with /revolut <username> for penalty reports."
     )
 
@@ -1210,15 +1239,35 @@ async def backup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def presubmit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await ensure_restored()
     register_user(update)
+    chat_id = update.effective_chat.id
+    user_id = update.effective_user.id
+
     if not context.args:
-        await update.effective_message.reply_text(
-            "Usage: /presubmit <submission-link>\nSave a LeetCode submission link or NeetCode problem link for a future travel day."
-        )
+        conn = db()
+        rows = conn.execute(
+            "SELECT id, problem_slug FROM presubmissions "
+            "WHERE chat_id=? AND user_id=? AND used_at IS NULL ORDER BY id",
+            (chat_id, user_id),
+        ).fetchall()
+        conn.close()
+        if not rows:
+            await update.effective_message.reply_text(
+                "Your pre-submission queue is empty. Add one with /presubmit <problem-link>."
+            )
+            return
+        lines = ["📦 Your available pre-submissions"]
+        for index, (row_id, slug) in enumerate(rows, 1):
+            platform, _, problem = slug.partition(":")
+            lines.append(f"{index}. {platform.title()} · {problem.replace('-', ' ')}")
+        lines.append("\nUse /usepresubmit to activate the oldest, or /usepresubmit 2 to choose item 2.")
+        await update.effective_message.reply_text("\n".join(lines))
         return
 
     match = SUBMISSION_URL.search(context.args[0])
     if not match:
-        await update.effective_message.reply_text("Send a supported LeetCode or NeetCode problem link.")
+        await update.effective_message.reply_text(
+            "Send a supported LeetCode submission link or NeetCode problem link."
+        )
         return
 
     url = match.group(0)
@@ -1230,41 +1279,44 @@ async def presubmit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     problem_slug = f"{platform}:{raw_slug}"
     conn = db()
 
-    pending_duplicate = conn.execute(
-        "SELECT id, used_at FROM presubmissions "
-        "WHERE chat_id=? AND user_id=? AND problem_slug=? "
-        "ORDER BY id DESC LIMIT 1",
-        (update.effective_chat.id, update.effective_user.id, problem_slug),
+    queued = conn.execute(
+        "SELECT 1 FROM presubmissions WHERE chat_id=? AND user_id=? AND problem_slug=? LIMIT 1",
+        (chat_id, user_id, problem_slug),
     ).fetchone()
-    solved_duplicate = conn.execute(
-        "SELECT 1 FROM competition_submissions "
-        "WHERE chat_id=? AND user_id=? AND problem_slug=? LIMIT 1",
-        (update.effective_chat.id, update.effective_user.id, problem_slug),
+    scored = conn.execute(
+        "SELECT 1 FROM competition_submissions WHERE chat_id=? AND user_id=? AND problem_slug=? LIMIT 1",
+        (chat_id, user_id, problem_slug),
     ).fetchone()
 
-    if pending_duplicate and pending_duplicate[1] is None:
-        conn.close()
-        await update.effective_message.reply_text(
-            f"⚠️ You already have {platform.title()} · {raw_slug.replace('-', ' ')} in your unused pre-submission queue. "
-            "I didn't add it again. Use /presubmits to view your queue."
-        )
-        return
+    legacy_duplicate = False
+    for (existing_url,) in conn.execute(
+        "SELECT url FROM submissions WHERE chat_id=? AND user_id=?",
+        (chat_id, user_id),
+    ).fetchall():
+        existing_platform, existing_slug = extract_problem_identity(existing_url)
+        if existing_platform and existing_slug and f"{existing_platform}:{existing_slug}" == problem_slug:
+            legacy_duplicate = True
+            break
 
-    if solved_duplicate:
+    if queued or scored or legacy_duplicate:
         conn.close()
+        if queued:
+            reason = "This problem is already in your pre-submission history (used or unused)."
+        else:
+            reason = "This problem has already been submitted during the challenge."
         await update.effective_message.reply_text(
-            f"⚠️ You've already submitted {platform.title()} · {raw_slug.replace('-', ' ')} during the competition. "
-            "I didn't add it to your pre-submission queue because it won't score again."
+            f"⚠️ {platform.title()} · {raw_slug.replace('-', ' ')} is a duplicate. {reason} "
+            "I didn't add it again. Use /presubmit to view your unused queue."
         )
         return
 
     conn.execute(
         "INSERT INTO presubmissions(chat_id,user_id,url,problem_slug,created_at) VALUES(?,?,?,?,?)",
-        (update.effective_chat.id, update.effective_user.id, url, problem_slug, datetime.now(timezone.utc).isoformat()),
+        (chat_id, user_id, url, problem_slug, datetime.now(timezone.utc).isoformat()),
     )
     count = conn.execute(
         "SELECT COUNT(*) FROM presubmissions WHERE chat_id=? AND user_id=? AND used_at IS NULL",
-        (update.effective_chat.id, update.effective_user.id),
+        (chat_id, user_id),
     ).fetchone()[0]
     conn.commit()
     conn.close()
@@ -1273,31 +1325,8 @@ async def presubmit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.effective_message.reply_text(
         f"📦 Pre-submission saved: {platform.title()} · {raw_slug.replace('-', ' ')}\n"
         f"Available pre-submissions: {count}\n{suffix}\n\n"
-        "Use /presubmits to see your queue and /usepresubmit when you need one."
+        "Use /presubmit to view your queue and /usepresubmit when you need one."
     )
-
-
-async def presubmits(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await ensure_restored()
-    register_user(update)
-    conn = db()
-    rows = conn.execute(
-        "SELECT id, problem_slug, created_at FROM presubmissions "
-        "WHERE chat_id=? AND user_id=? AND used_at IS NULL ORDER BY id",
-        (update.effective_chat.id, update.effective_user.id),
-    ).fetchall()
-    conn.close()
-    if not rows:
-        await update.effective_message.reply_text(
-            "Your pre-submission queue is empty. Save one with /presubmit <problem-link>."
-        )
-        return
-    lines = ["📦 Your available pre-submissions"]
-    for index, (row_id, slug, created_at) in enumerate(rows, 1):
-        platform, _, problem = slug.partition(":")
-        lines.append(f"{index}. {platform.title()} · {problem.replace('-', ' ')} (queue #{row_id})")
-    lines.append("\nUse /usepresubmit to activate the oldest, or /usepresubmit 2 to choose the second item.")
-    await update.effective_message.reply_text("\n".join(lines))
 
 
 async def usepresubmit(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1335,7 +1364,7 @@ async def usepresubmit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not row:
         conn.close()
         await update.effective_message.reply_text(
-            "That pre-submission isn't available. Use /presubmits to see your queue."
+            "That pre-submission isn't available. Use /presubmit to see your queue."
         )
         return
 
@@ -1488,11 +1517,11 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("revolut", revolut))
+    app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("today", today))
     app.add_handler(CommandHandler("random", random_problem))
     app.add_handler(CommandHandler("submit", submit_command))
     app.add_handler(CommandHandler("presubmit", presubmit))
-    app.add_handler(CommandHandler("presubmits", presubmits))
     app.add_handler(CommandHandler("usepresubmit", usepresubmit))
     app.add_handler(CommandHandler("backup", backup_command))
     app.add_handler(CallbackQueryHandler(difficulty_callback, pattern=r"^diff:"))
