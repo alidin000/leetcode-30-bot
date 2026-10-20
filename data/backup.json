@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-20T12:36:55.114745+00:00",
+  "updated_at": "2026-10-20T12:38:53.260605+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -676,6 +676,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/middle-of-the-linked-list/submissions/2165745888/",
       "submitted_at": "2026-10-07T21:02:01.405919+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 7,
+      "problem_slug": "leetcode:remove-duplicates-from-sorted-array-ii",
+      "problem_title": "Remove Duplicates from Sorted Array II",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/remove-duplicates-from-sorted-array-ii/submissions/2170139928/",
+      "submitted_at": "2026-10-12T11:45:09.788750+00:00"
     }
   ],
   "presubmissions": [
