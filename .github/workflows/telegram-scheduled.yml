@@ -6,6 +6,8 @@ on:
       timezone: "Europe/Budapest"
     - cron: "15 19 * * *"
       timezone: "Europe/Budapest"
+    - cron: "10 0 * * *"
+      timezone: "UTC"
   workflow_dispatch:
     inputs:
       mode:
@@ -16,6 +18,7 @@ on:
         options:
           - morning
           - evening
+          - penalty
 
 jobs:
   send:
