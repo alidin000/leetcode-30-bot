@@ -656,7 +656,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Use /today for today's problem.\n"
         "Send your LeetCode submission link after solving.\n"
         "Use /progress or /leaderboard to see the challenge.\n"
-        "Use /track to see who submitted each day this week."
+        "Use /track to see who submitted each day this week.\n"
+        "Use /presubmit to save a solution for a future day, then /usepresubmit when needed."
     )
 
 
@@ -705,7 +706,7 @@ async def track(update: Update, context: ContextTypes.DEFAULT_TYPE):
     submitted_rows = conn.execute(
         """
         SELECT DISTINCT user_id, day
-        FROM competition_submissions
+        FROM submissions
         WHERE chat_id=? AND day BETWEEN ? AND ?
         """,
         (chat_id, first_day, today),
@@ -908,6 +909,11 @@ def save_competition_submission(
     ).fetchone()
 
     if existing:
+        conn.execute(
+            "INSERT OR IGNORE INTO submissions(chat_id,user_id,day,url,submitted_at) VALUES(?,?,?,?,?)",
+            (chat_id, user_id, day, url, submitted_at),
+        )
+        conn.commit()
         conn.close()
         return {"counted": False, "existing": existing}
 
@@ -1050,9 +1056,16 @@ async def record_submission(update: Update, url: str, context: ContextTypes.DEFA
 
     if not result["counted"]:
         existing = result["existing"]
+        conn = db()
+        conn.execute(
+            "INSERT OR IGNORE INTO submissions(chat_id,user_id,day,url,submitted_at) VALUES(?,?,?,?,?)",
+            (chat_id, user_id, day, url, submitted_at),
+        )
+        conn.commit()
+        conn.close()
         await update.effective_message.reply_text(
             f"⚠️ Duplicate: {metadata['title']} was already counted on Day {existing[0]}. "
-            f"It is worth {existing[3]} point(s), so this submission adds 0 points."
+            f"It adds 0 points, but today's participation is recorded."
         )
         return
 
@@ -1145,6 +1158,127 @@ async def backup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.effective_message.reply_text("❌ Backup failed. Check the Render logs and GitHub token permissions.")
 
+async def presubmit(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await ensure_restored()
+    register_user(update)
+    if not context.args:
+        await update.effective_message.reply_text(
+            "Usage: /presubmit <problem-link>\nSave a LeetCode or NeetCode problem for a future travel day."
+        )
+        return
+
+    match = SUBMISSION_URL.search(context.args[0])
+    if not match:
+        await update.effective_message.reply_text("Send a supported LeetCode or NeetCode problem link.")
+        return
+
+    url = match.group(0)
+    platform, raw_slug = extract_problem_identity(url)
+    if not platform or not raw_slug:
+        await update.effective_message.reply_text("I couldn't identify that problem. Please send a problem-specific link.")
+        return
+
+    conn = db()
+    conn.execute(
+        "INSERT INTO presubmissions(chat_id,user_id,url,problem_slug,created_at) VALUES(?,?,?,?,?)",
+        (update.effective_chat.id, update.effective_user.id, url, f"{platform}:{raw_slug}", datetime.now(timezone.utc).isoformat()),
+    )
+    count = conn.execute(
+        "SELECT COUNT(*) FROM presubmissions WHERE chat_id=? AND user_id=? AND used_at IS NULL",
+        (update.effective_chat.id, update.effective_user.id),
+    ).fetchone()[0]
+    conn.commit()
+    conn.close()
+    backup_ok = await asyncio.to_thread(backup_to_github)
+    suffix = "Backup saved." if backup_ok else "Warning: GitHub backup failed; saved locally for now."
+    await update.effective_message.reply_text(
+        f"📦 Pre-submission saved: {platform.title()} · {raw_slug.replace('-', ' ')}\n"
+        f"Available pre-submissions: {count}\n{suffix}\n\n"
+        "Use /presubmits to see your queue and /usepresubmit when you need one."
+    )
+
+
+async def presubmits(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await ensure_restored()
+    register_user(update)
+    conn = db()
+    rows = conn.execute(
+        "SELECT id, problem_slug, created_at FROM presubmissions "
+        "WHERE chat_id=? AND user_id=? AND used_at IS NULL ORDER BY id",
+        (update.effective_chat.id, update.effective_user.id),
+    ).fetchall()
+    conn.close()
+    if not rows:
+        await update.effective_message.reply_text(
+            "Your pre-submission queue is empty. Save one with /presubmit <problem-link>."
+        )
+        return
+    lines = ["📦 Your available pre-submissions"]
+    for index, (row_id, slug, created_at) in enumerate(rows, 1):
+        platform, _, problem = slug.partition(":")
+        lines.append(f"{index}. {platform.title()} · {problem.replace('-', ' ')} (queue #{row_id})")
+    lines.append("\nUse /usepresubmit to activate the oldest, or /usepresubmit 2 to choose the second item.")
+    await update.effective_message.reply_text("\n".join(lines))
+
+
+async def usepresubmit(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await ensure_restored()
+    register_user(update)
+    try:
+        position = int(context.args[0]) if context.args else 1
+    except ValueError:
+        await update.effective_message.reply_text("Usage: /usepresubmit [queue-number]")
+        return
+    if position < 1:
+        await update.effective_message.reply_text("Choose a queue number of 1 or higher.")
+        return
+
+    chat_id = update.effective_chat.id
+    user_id = update.effective_user.id
+    day = current_day()
+    conn = db()
+    already_done = conn.execute(
+        "SELECT url FROM submissions WHERE chat_id=? AND user_id=? AND day=?",
+        (chat_id, user_id, day),
+    ).fetchone()
+    if already_done:
+        conn.close()
+        await update.effective_message.reply_text(
+            "✅ You already have participation recorded for today. Your pre-submission queue is unchanged."
+        )
+        return
+
+    row = conn.execute(
+        "SELECT id, url, problem_slug FROM presubmissions "
+        "WHERE chat_id=? AND user_id=? AND used_at IS NULL ORDER BY id LIMIT 1 OFFSET ?",
+        (chat_id, user_id, position - 1),
+    ).fetchone()
+    if not row:
+        conn.close()
+        await update.effective_message.reply_text(
+            "That pre-submission isn't available. Use /presubmits to see your queue."
+        )
+        return
+
+    row_id, url, slug = row
+    now = datetime.now(timezone.utc).isoformat()
+    conn.execute(
+        "UPDATE presubmissions SET used_at=?, used_day=? WHERE id=? AND used_at IS NULL",
+        (now, day, row_id),
+    )
+    conn.commit()
+    conn.close()
+    backup_ok = await asyncio.to_thread(backup_to_github)
+    await update.effective_message.reply_text(
+        f"🧳 Activating pre-submission for Day {day}: {slug.replace(':', ' · ').replace('-', ' ')}"
+    )
+    await record_submission(update, url, context)
+    if not backup_ok:
+        await update.effective_message.reply_text(
+            "⚠️ The pre-submission activation backup failed. It is stored locally; run /backup when connectivity is restored."
+        )
+
+
 async def submit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(update)
     if not context.args:
@@ -1180,7 +1314,7 @@ def incomplete_users(chat_id, day):
         WHERE u.chat_id=?
           AND NOT EXISTS (
               SELECT 1
-              FROM competition_submissions s
+              FROM submissions s
               WHERE s.chat_id=u.chat_id
                 AND s.user_id=u.user_id
                 AND s.day=?
@@ -1277,6 +1411,9 @@ def main():
     app.add_handler(CommandHandler("today", today))
     app.add_handler(CommandHandler("random", random_problem))
     app.add_handler(CommandHandler("submit", submit_command))
+    app.add_handler(CommandHandler("presubmit", presubmit))
+    app.add_handler(CommandHandler("presubmits", presubmits))
+    app.add_handler(CommandHandler("usepresubmit", usepresubmit))
     app.add_handler(CommandHandler("backup", backup_command))
     app.add_handler(CallbackQueryHandler(difficulty_callback, pattern=r"^diff:"))
     app.add_handler(CommandHandler("testtag", test_tag))
