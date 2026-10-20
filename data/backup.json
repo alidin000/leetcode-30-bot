@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-20T12:09:55.014977+00:00",
+  "updated_at": "2026-10-20T12:10:58.899218+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -187,6 +187,41 @@
       "chat_id": -5554078333,
       "user_id": 1023678868,
       "day": 15,
+      "url": "https://leetcode.com/problems/consecutive-characters/submissions/2176616936/",
+      "submitted_at": "2026-10-19T22:10:27.882682+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 6,
+      "url": "https://leetcode.com/problems/sort-colors/submissions/2169694273/",
+      "submitted_at": "2026-10-11T22:36:35.493572+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 8,
+      "url": "https://leetcode.com/problems/construct-the-rectangle/submissions/2171622231/",
+      "submitted_at": "2026-10-13T22:06:56.598529+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 10,
+      "url": "https://leetcode.com/problems/max-consecutive-ones-iii/submissions/2173406116/",
+      "submitted_at": "2026-10-15T22:00:50.902146+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 11,
+      "url": "https://leetcode.com/problems/nim-game/submissions/2174195424",
+      "submitted_at": "2026-10-16T23:21:28.885677+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 14,
       "url": "https://leetcode.com/problems/consecutive-characters/submissions/2176616936/",
       "submitted_at": "2026-10-19T22:10:27.882682+00:00"
     }
