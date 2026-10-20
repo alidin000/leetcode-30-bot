@@ -440,31 +440,23 @@ def current_day():
 
 def normalize_submission_days():
     conn = db()
-    rows = conn.execute(
-        "SELECT id, submitted_at FROM competition_submissions"
-    ).fetchall()
     changed = 0
-    for submission_id, submitted_at in rows:
-        try:
-            submitted_date = datetime.fromisoformat(submitted_at).astimezone(timezone.utc).date()
-        except (TypeError, ValueError):
-            continue
-        calculated_day = min(30, max(1, (submitted_date - START_DATE).days + 1))
-        current = conn.execute(
-            "SELECT day FROM competition_submissions WHERE id=?",
-            (submission_id,),
-        ).fetchone()
-        if current and current[0] != calculated_day:
-            conn.execute(
-                "UPDATE competition_submissions SET day=? WHERE id=?",
-                (calculated_day, submission_id),
-            )
-            changed += 1
+    for table in ("competition_submissions", "submissions"):
+        rows = conn.execute(f"SELECT id, submitted_at FROM {table}").fetchall()
+        for submission_id, submitted_at in rows:
+            try:
+                submitted_date = datetime.fromisoformat(submitted_at).astimezone(timezone.utc).date()
+            except (TypeError, ValueError):
+                continue
+            calculated_day = min(30, max(1, (submitted_date - START_DATE).days + 1))
+            current = conn.execute(f"SELECT day FROM {table} WHERE id=?", (submission_id,)).fetchone()
+            if current and current[0] != calculated_day:
+                conn.execute(f"UPDATE {table} SET day=? WHERE id=?", (calculated_day, submission_id))
+                changed += 1
     conn.commit()
     conn.close()
     if changed:
-        logging.info("Normalized %s competition submission day assignments.", changed)
-
+        logging.info("Normalized %s submission day assignments to UTC.", changed)
 
 def challenge_message(day):
     name, url = challenge(day)
