@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-20T20:27:40.588806+00:00",
+  "updated_at": "2026-10-20T20:27:51.639892+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -241,6 +241,13 @@
       "day": 15,
       "url": "https://neetcode.io/problems/merge-two-sorted-linked-lists/history",
       "submitted_at": "2026-10-20T15:33:36.998603+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 15,
+      "url": "https://leetcode.com/problems/sum-of-root-to-leaf-binary-numbers/submissions/2177423760",
+      "submitted_at": "2026-10-20T20:27:51.387694+00:00"
     }
   ],
   "competition_submissions": [
@@ -705,6 +712,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/merge-two-sorted-linked-lists/history",
       "submitted_at": "2026-10-20T15:33:36.998603+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 15,
+      "problem_slug": "leetcode:sum-of-root-to-leaf-binary-numbers",
+      "problem_title": "Sum of Root To Leaf Binary Numbers",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/sum-of-root-to-leaf-binary-numbers/submissions/2177423760",
+      "submitted_at": "2026-10-20T20:27:51.387694+00:00"
     }
   ],
   "presubmissions": [
