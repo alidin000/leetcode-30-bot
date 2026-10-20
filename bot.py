@@ -275,6 +275,21 @@ def backup_to_github():
             merged[key] = row
         return list(merged.values())
 
+    merged_presubmissions = merge_records(
+        remote_backup.get("presubmissions", []),
+        current_presubmissions,
+        ("chat_id", "user_id", "id"),
+    )
+    seen_unused = set()
+    clean_presubmissions = []
+    for row in sorted(merged_presubmissions, key=lambda item: (item.get("id", 0), item.get("created_at", ""))):
+        key = (row.get("chat_id"), row.get("user_id"), row.get("problem_slug"))
+        if not row.get("used_at"):
+            if key in seen_unused:
+                continue
+            seen_unused.add(key)
+        clean_presubmissions.append(row)
+
     backup = {
         "version": max(2, int(remote_backup.get("version", 1) or 1)),
         "updated_at": datetime.now(timezone.utc).isoformat(),
@@ -293,10 +308,7 @@ def backup_to_github():
             current_competition_submissions,
             ("chat_id", "user_id", "problem_slug"),
         ),
-        "presubmissions": merge_records(
-            remote_backup.get("presubmissions", []), current_presubmissions,
-            ("chat_id", "user_id", "id"),
-        ),
+        "presubmissions": clean_presubmissions,
     }
 
     content = base64.b64encode(
@@ -401,6 +413,18 @@ def restore_from_github():
         VALUES(?,?,?,?,?,?,?,?)""",
         [(row.get("id"), row["chat_id"], row["user_id"], row["url"], row["problem_slug"], row["created_at"], row.get("used_at"), row.get("used_day"))
          for row in backup.get("presubmissions", []) if row.get("url") and row.get("problem_slug") and row.get("created_at")],
+    )
+    conn.execute(
+        """DELETE FROM presubmissions
+        WHERE used_at IS NULL AND id NOT IN (
+            SELECT MIN(id) FROM presubmissions
+            WHERE used_at IS NULL
+            GROUP BY chat_id, user_id, problem_slug
+        )"""
+    )
+    conn.execute(
+        """INSERT OR IGNORE INTO submissions(chat_id,user_id,day,url,submitted_at)
+        SELECT chat_id,user_id,day,url,submitted_at FROM competition_submissions"""
     )
     conn.commit()
     conn.close()
@@ -1502,6 +1526,21 @@ def main():
     if restored:
         backfill_competition_submissions()
         normalize_submission_days()
+        conn = db()
+        conn.execute(
+            """INSERT OR IGNORE INTO submissions(chat_id,user_id,day,url,submitted_at)
+            SELECT chat_id,user_id,day,url,submitted_at FROM competition_submissions"""
+        )
+        conn.execute(
+            """DELETE FROM presubmissions
+            WHERE used_at IS NULL AND id NOT IN (
+                SELECT MIN(id) FROM presubmissions
+                WHERE used_at IS NULL
+                GROUP BY chat_id, user_id, problem_slug
+            )"""
+        )
+        conn.commit()
+        conn.close()
         # Only back up after a successful restore. This prevents an empty or
         # incomplete local database from replacing the durable GitHub backup.
         backup_to_github()
