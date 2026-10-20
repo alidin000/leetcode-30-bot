@@ -10,6 +10,7 @@ A small Telegram bot for a 30-day LeetCode challenge.
 - Duplicate problems are rejected and score 0
 - Difficulty scoring: Easy = 1, Medium = 2, Hard = 4
 - Daily points leaderboard and end-of-day winner
+- Automated end-of-day penalty report: missing a day means €1 to each other registered participant
 - UTC-based challenge-day boundaries, matching LeetCode's Daily Challenge calendar
 - Pre-submission queue for travel days
 - Submission links recorded from the group
@@ -35,7 +36,8 @@ python bot.py
 
 ## Commands
 
-- `/start`
+- `/start` — register in the challenge
+- `/revolut <username>` — register or update your Revolut username for penalty reports
 - `/today`
 - `/progress`
 - `/track` — show each participant's submitted and missed days for the last 7 challenge days (`/track 14` shows up to 14 days)
@@ -59,3 +61,8 @@ Environment variable:
 ```
 TELEGRAM_BOT_TOKEN
 ```
+
+
+## Penalty report
+
+Each participant should run `/start` in the challenge group and register their own Revolut handle using `/revolut <username>`. The automated penalty report runs at 00:10 UTC after the LeetCode day closes and lists missed participants and the €1 transfers owed to each other registered participant. The report does not initiate payments. Participants without a registered Revolut handle are called out and excluded from transfer calculations until they register.
