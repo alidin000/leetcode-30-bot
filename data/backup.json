@@ -1,24 +1,27 @@
 {
   "version": 2,
-  "updated_at": "2026-10-20T12:21:23.734493+00:00",
+  "updated_at": "2026-10-20T12:36:55.114745+00:00",
   "users": [
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
       "username": "Emiliyagv",
-      "first_name": "Emiliya"
+      "first_name": "Emiliya",
+      "revolut_username": null
     },
     {
       "chat_id": -5554078333,
       "user_id": 891132706,
       "username": "alidinn",
-      "first_name": "Alidin"
+      "first_name": "Alidin",
+      "revolut_username": null
     },
     {
       "chat_id": -5554078333,
       "user_id": 6327136808,
       "username": "alatarlajanu",
-      "first_name": "Ala"
+      "first_name": "Ala",
+      "revolut_username": null
     }
   ],
   "submissions": [
@@ -82,8 +85,8 @@
       "chat_id": -5554078333,
       "user_id": 1023678868,
       "day": 7,
-      "url": "https://leetcode.com/problems/sort-colors/submissions/2169694273/",
-      "submitted_at": "2026-10-11T22:36:35.493572+00:00"
+      "url": "https://leetcode.com/problems/remove-duplicates-from-sorted-array-ii/submissions/2170139928/",
+      "submitted_at": "2026-10-12T11:45:09.788750+00:00"
     },
     {
       "chat_id": -5554078333,
@@ -110,8 +113,8 @@
       "chat_id": -5554078333,
       "user_id": 891132706,
       "day": 9,
-      "url": "https://leetcode.com/problems/construct-the-rectangle/submissions/2171622231/",
-      "submitted_at": "2026-10-13T22:06:56.598529+00:00"
+      "url": "https://leetcode.com/problems/shuffle-string/submissions/2172451898",
+      "submitted_at": "2026-10-14T19:02:57.970494+00:00"
     },
     {
       "chat_id": -5554078333,
@@ -224,6 +227,13 @@
       "day": 14,
       "url": "https://leetcode.com/problems/consecutive-characters/submissions/2176616936/",
       "submitted_at": "2026-10-19T22:10:27.882682+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 2,
+      "url": "https://leetcode.com/problems/middle-of-the-linked-list/submissions/2165745888/",
+      "submitted_at": "2026-10-07T21:02:01.405919+00:00"
     }
   ],
   "competition_submissions": [
@@ -556,6 +566,116 @@
       "points": 1,
       "url": "https://leetcode.com/problems/consecutive-characters/submissions/2176616936/",
       "submitted_at": "2026-10-19T22:10:27.882682+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 1,
+      "problem_slug": "leetcode:set-mismatch",
+      "problem_title": "Set Mismatch",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/set-mismatch/submissions/2163863137/?envType=problem-list-v2&envId=dsa-linear-shoal-array-ii",
+      "submitted_at": "2026-10-06T05:44:12.781210+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 2,
+      "problem_slug": "leetcode:partition-equal-subset-sum",
+      "problem_title": "Partition Equal Subset Sum",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/partition-equal-subset-sum/submissions/2165751814",
+      "submitted_at": "2026-10-07T21:09:00.358315+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 3,
+      "problem_slug": "leetcode:find-all-numbers-disappeared-in-an-array",
+      "problem_title": "Find All Numbers Disappeared in an Array",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/find-all-numbers-disappeared-in-an-array/submissions/2166732451",
+      "submitted_at": "2026-10-08T20:18:59.268853+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 3,
+      "problem_slug": "leetcode:container-with-most-water",
+      "problem_title": "Container With Most Water",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/container-with-most-water/submissions/2166753024",
+      "submitted_at": "2026-10-08T21:13:19.889603+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 4,
+      "problem_slug": "leetcode:3sum",
+      "problem_title": "3Sum",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/3sum/submissions/2167682075/",
+      "submitted_at": "2026-10-09T21:24:35.985936+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 4,
+      "problem_slug": "leetcode:minimum-difference-between-highest-and-lowest-of-k-scores",
+      "problem_title": "Minimum Difference Between Highest and Lowest of K Scores",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/minimum-difference-between-highest-and-lowest-of-k-scores/submissions/2167687074",
+      "submitted_at": "2026-10-09T21:43:44.741783+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 6,
+      "problem_slug": "leetcode:coin-change-ii",
+      "problem_title": "Coin Change II",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/coin-change-ii/submissions/2169105938",
+      "submitted_at": "2026-10-11T09:08:05.285003+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 6,
+      "problem_slug": "leetcode:sort-colors",
+      "problem_title": "Sort Colors",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/sort-colors/submissions/2169694273/",
+      "submitted_at": "2026-10-11T22:36:35.493572+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 7,
+      "problem_slug": "leetcode:build-an-array-with-stack-operations",
+      "problem_title": "Build an Array With Stack Operations",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/build-an-array-with-stack-operations/submissions/2170601738",
+      "submitted_at": "2026-10-12T20:41:14.556470+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 2,
+      "problem_slug": "leetcode:middle-of-the-linked-list",
+      "problem_title": "Middle of the Linked List",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/middle-of-the-linked-list/submissions/2165745888/",
+      "submitted_at": "2026-10-07T21:02:01.405919+00:00"
     }
   ],
   "presubmissions": [
@@ -566,16 +686,6 @@
       "url": "https://leetcode.com/problems/nim-game/submissions/2174195424",
       "problem_slug": "leetcode:nim-game",
       "created_at": "2026-10-20T12:17:40.493162+00:00",
-      "used_at": null,
-      "used_day": null
-    },
-    {
-      "id": 2,
-      "chat_id": -5554078333,
-      "user_id": 891132706,
-      "url": "https://leetcode.com/problems/nim-game/submissions/2174195424",
-      "problem_slug": "leetcode:nim-game",
-      "created_at": "2026-10-20T12:21:23.258504+00:00",
       "used_at": null,
       "used_day": null
     }
