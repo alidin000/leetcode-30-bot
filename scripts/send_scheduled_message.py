@@ -368,7 +368,7 @@ def evening_text(day, entries, users, chat_id):
 def penalty_text(day, users, backup, chat_id):
     participation = {
         (str(row.get("chat_id")), str(row.get("user_id")), int(row.get("day", 0)))
-        for row in backup.get("submissions", [])
+        for row in backup.get("submissions", []) + backup.get("competition_submissions", [])
         if row.get("chat_id") is not None and row.get("user_id") is not None
     }
     participants = [row for row in users if str(row.get("chat_id")) == str(chat_id)]
