@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-21T21:39:54.720391+00:00",
+  "updated_at": "2026-10-21T21:40:05.826850+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -255,6 +255,13 @@
       "day": 16,
       "url": "https://neetcode.io/problems/linked-list-cycle-detection/question",
       "submitted_at": "2026-10-21T16:43:51.175696+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 16,
+      "url": "https://leetcode.com/problems/longest-subarray-of-1s-after-deleting-one-element/submissions/2178359498/",
+      "submitted_at": "2026-10-21T21:40:05.391481+00:00"
     }
   ],
   "competition_submissions": [
@@ -741,6 +748,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/linked-list-cycle-detection/question",
       "submitted_at": "2026-10-21T16:43:51.175696+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 16,
+      "problem_slug": "leetcode:longest-subarray-of-1s-after-deleting-one-element",
+      "problem_title": "Longest Subarray of 1's After Deleting One Element",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/longest-subarray-of-1s-after-deleting-one-element/submissions/2178359498/",
+      "submitted_at": "2026-10-21T21:40:05.391481+00:00"
     }
   ],
   "presubmissions": [
