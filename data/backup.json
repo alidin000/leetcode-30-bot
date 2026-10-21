@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-21T16:43:42.999952+00:00",
+  "updated_at": "2026-10-21T16:43:51.664533+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -248,6 +248,13 @@
       "day": 15,
       "url": "https://leetcode.com/problems/sum-of-root-to-leaf-binary-numbers/submissions/2177423760",
       "submitted_at": "2026-10-20T20:27:51.387694+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 16,
+      "url": "https://neetcode.io/problems/linked-list-cycle-detection/question",
+      "submitted_at": "2026-10-21T16:43:51.175696+00:00"
     }
   ],
   "competition_submissions": [
@@ -723,6 +730,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/sum-of-root-to-leaf-binary-numbers/submissions/2177423760",
       "submitted_at": "2026-10-20T20:27:51.387694+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 16,
+      "problem_slug": "neetcode:linked-list-cycle-detection",
+      "problem_title": "Linked List Cycle Detection",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://neetcode.io/problems/linked-list-cycle-detection/question",
+      "submitted_at": "2026-10-21T16:43:51.175696+00:00"
     }
   ],
   "presubmissions": [
