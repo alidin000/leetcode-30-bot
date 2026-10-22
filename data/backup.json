@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-22T14:16:52.445308+00:00",
+  "updated_at": "2026-10-22T14:17:08.032741+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -262,6 +262,13 @@
       "day": 16,
       "url": "https://leetcode.com/problems/longest-subarray-of-1s-after-deleting-one-element/submissions/2178359498/",
       "submitted_at": "2026-10-21T21:40:05.391481+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 17,
+      "url": "https://neetcode.io/problems/find-duplicate-integer/history",
+      "submitted_at": "2026-10-22T14:17:07.574723+00:00"
     }
   ],
   "competition_submissions": [
@@ -759,6 +766,17 @@
       "points": 2,
       "url": "https://leetcode.com/problems/longest-subarray-of-1s-after-deleting-one-element/submissions/2178359498/",
       "submitted_at": "2026-10-21T21:40:05.391481+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 17,
+      "problem_slug": "neetcode:find-duplicate-integer",
+      "problem_title": "Find the Duplicate Number",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://neetcode.io/problems/find-duplicate-integer/history",
+      "submitted_at": "2026-10-22T14:17:07.574723+00:00"
     }
   ],
   "presubmissions": [
