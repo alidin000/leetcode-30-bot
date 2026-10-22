@@ -107,10 +107,16 @@ def send_telegram(chat_id, text):
         "disable_web_page_preview": "true",
     }).encode()
     request = urllib.request.Request(url, data=data, method="POST")
-    with urllib.request.urlopen(request, timeout=20) as response:
-        result = json.loads(response.read().decode())
-        if not result.get("ok"):
-            raise RuntimeError(result)
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            result = json.loads(response.read().decode())
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(
+            f"Telegram sendMessage failed with HTTP {exc.code}: {detail}"
+        ) from exc
+    if not result.get("ok"):
+        raise RuntimeError(f"Telegram sendMessage failed: {result}")
 
 def mode():
     manual = os.environ.get("MANUAL_MODE")
@@ -392,11 +398,11 @@ def penalty_text(day, users, backup, chat_id):
         lines.extend([
             "⚠️ <b>Revolut registration missing</b>",
             html.escape(", ".join(names)),
-            "These participants are excluded from transfers until they register with /revolut <username>.",
+            "These participants are excluded from transfers until they register with /revolut username.",
             "",
         ])
     if not registered:
-        lines.append("No participants have registered Revolut usernames yet. Ask everyone to use /revolut <username>.")
+        lines.append("No participants have registered Revolut usernames yet. Ask everyone to use /revolut username.")
         return "\n".join(lines)
     if not missed:
         lines.append("✅ No registered participant missed this day. No penalties.")
