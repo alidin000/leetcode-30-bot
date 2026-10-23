@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-23T17:52:07.497322+00:00",
+  "updated_at": "2026-10-23T17:52:17.265530+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -269,6 +269,13 @@
       "day": 17,
       "url": "https://neetcode.io/problems/find-duplicate-integer/history",
       "submitted_at": "2026-10-22T14:17:07.574723+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 18,
+      "url": "https://neetcode.io/problems/add-two-numbers/question",
+      "submitted_at": "2026-10-23T17:52:16.808394+00:00"
     }
   ],
   "competition_submissions": [
@@ -777,6 +784,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/find-duplicate-integer/history",
       "submitted_at": "2026-10-22T14:17:07.574723+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 18,
+      "problem_slug": "neetcode:add-two-numbers",
+      "problem_title": "Add Two Numbers",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://neetcode.io/problems/add-two-numbers/question",
+      "submitted_at": "2026-10-23T17:52:16.808394+00:00"
     }
   ],
   "presubmissions": [
