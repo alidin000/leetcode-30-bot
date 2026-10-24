@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-24T22:46:24.159912+00:00",
+  "updated_at": "2026-10-24T22:46:30.991774+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -290,6 +290,13 @@
       "day": 19,
       "url": "https://leetcode.com/problems/solving-questions-with-brainpower/submissions/2180885074",
       "submitted_at": "2026-10-24T22:11:06.195685+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 19,
+      "url": "https://leetcode.com/problems/get-equal-substrings-within-budget/submissions/2180894839/",
+      "submitted_at": "2026-10-24T22:46:30.532584+00:00"
     }
   ],
   "competition_submissions": [
@@ -831,6 +838,17 @@
       "points": 2,
       "url": "https://leetcode.com/problems/solving-questions-with-brainpower/submissions/2180885074",
       "submitted_at": "2026-10-24T22:11:06.195685+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 19,
+      "problem_slug": "leetcode:get-equal-substrings-within-budget",
+      "problem_title": "Get Equal Substrings Within Budget",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/get-equal-substrings-within-budget/submissions/2180894839/",
+      "submitted_at": "2026-10-24T22:46:30.532584+00:00"
     }
   ],
   "presubmissions": [
