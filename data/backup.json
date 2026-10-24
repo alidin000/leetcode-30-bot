@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-24T18:48:19.907199+00:00",
+  "updated_at": "2026-10-24T18:48:26.987947+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -276,6 +276,13 @@
       "day": 18,
       "url": "https://neetcode.io/problems/add-two-numbers/question",
       "submitted_at": "2026-10-23T17:52:16.808394+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 19,
+      "url": "https://neetcode.io/problems/remove-node-from-end-of-linked-list/history",
+      "submitted_at": "2026-10-24T18:48:26.635169+00:00"
     }
   ],
   "competition_submissions": [
@@ -795,6 +802,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/add-two-numbers/question",
       "submitted_at": "2026-10-23T17:52:16.808394+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 19,
+      "problem_slug": "neetcode:remove-node-from-end-of-linked-list",
+      "problem_title": "Remove Nth Node From End of List",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://neetcode.io/problems/remove-node-from-end-of-linked-list/history",
+      "submitted_at": "2026-10-24T18:48:26.635169+00:00"
     }
   ],
   "presubmissions": [
