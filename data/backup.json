@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-24T22:10:59.580292+00:00",
+  "updated_at": "2026-10-24T22:11:06.605053+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -283,6 +283,13 @@
       "day": 19,
       "url": "https://neetcode.io/problems/remove-node-from-end-of-linked-list/history",
       "submitted_at": "2026-10-24T18:48:26.635169+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 19,
+      "url": "https://leetcode.com/problems/solving-questions-with-brainpower/submissions/2180885074",
+      "submitted_at": "2026-10-24T22:11:06.195685+00:00"
     }
   ],
   "competition_submissions": [
@@ -813,6 +820,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/remove-node-from-end-of-linked-list/history",
       "submitted_at": "2026-10-24T18:48:26.635169+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 19,
+      "problem_slug": "leetcode:solving-questions-with-brainpower",
+      "problem_title": "Solving Questions With Brainpower",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/solving-questions-with-brainpower/submissions/2180885074",
+      "submitted_at": "2026-10-24T22:11:06.195685+00:00"
     }
   ],
   "presubmissions": [
