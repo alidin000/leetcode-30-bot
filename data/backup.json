@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-25T23:17:33.385608+00:00",
+  "updated_at": "2026-10-25T23:17:39.321978+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -311,6 +311,13 @@
       "day": 20,
       "url": "https://neetcode.io/problems/copy-linked-list-with-random-pointer/question",
       "submitted_at": "2026-10-25T13:01:32.100104+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 20,
+      "url": "https://leetcode.com/problems/range-sum-query-immutable/submissions/2181779822/?utm_source=chatgpt.com",
+      "submitted_at": "2026-10-25T23:17:38.799007+00:00"
     }
   ],
   "competition_submissions": [
@@ -885,6 +892,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/copy-linked-list-with-random-pointer/question",
       "submitted_at": "2026-10-25T13:01:32.100104+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 20,
+      "problem_slug": "leetcode:range-sum-query-immutable",
+      "problem_title": "Range Sum Query - Immutable",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/range-sum-query-immutable/submissions/2181779822/?utm_source=chatgpt.com",
+      "submitted_at": "2026-10-25T23:17:38.799007+00:00"
     }
   ],
   "presubmissions": [
