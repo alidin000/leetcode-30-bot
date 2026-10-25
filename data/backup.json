@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-25T13:01:25.291994+00:00",
+  "updated_at": "2026-10-25T13:01:32.344261+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -304,6 +304,13 @@
       "day": 20,
       "url": "https://leetcode.com/problems/longest-increasing-subsequence/submissions/2181198372",
       "submitted_at": "2026-10-25T07:43:34.381974+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 20,
+      "url": "https://neetcode.io/problems/copy-linked-list-with-random-pointer/question",
+      "submitted_at": "2026-10-25T13:01:32.100104+00:00"
     }
   ],
   "competition_submissions": [
@@ -867,6 +874,17 @@
       "points": 2,
       "url": "https://leetcode.com/problems/longest-increasing-subsequence/submissions/2181198372",
       "submitted_at": "2026-10-25T07:43:34.381974+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 20,
+      "problem_slug": "neetcode:copy-linked-list-with-random-pointer",
+      "problem_title": "Copy Linked List with Random Pointer",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://neetcode.io/problems/copy-linked-list-with-random-pointer/question",
+      "submitted_at": "2026-10-25T13:01:32.100104+00:00"
     }
   ],
   "presubmissions": [
