@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-26T13:52:53.266013+00:00",
+  "updated_at": "2026-10-26T13:53:01.074344+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -318,6 +318,13 @@
       "day": 20,
       "url": "https://leetcode.com/problems/range-sum-query-immutable/submissions/2181779822/?utm_source=chatgpt.com",
       "submitted_at": "2026-10-25T23:17:38.799007+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 21,
+      "url": "https://neetcode.io/problems/reorder-linked-list/history",
+      "submitted_at": "2026-10-26T13:53:00.539954+00:00"
     }
   ],
   "competition_submissions": [
@@ -903,6 +910,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/range-sum-query-immutable/submissions/2181779822/?utm_source=chatgpt.com",
       "submitted_at": "2026-10-25T23:17:38.799007+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 21,
+      "problem_slug": "neetcode:reorder-linked-list",
+      "problem_title": "Reorder Linked List",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://neetcode.io/problems/reorder-linked-list/history",
+      "submitted_at": "2026-10-26T13:53:00.539954+00:00"
     }
   ],
   "presubmissions": [
