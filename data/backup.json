@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-27T16:18:00.935481+00:00",
+  "updated_at": "2026-10-27T16:18:14.321367+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -339,6 +339,13 @@
       "day": 21,
       "url": "https://leetcode.com/problems/subarray-sum-equals-k/submissions/2182649769/",
       "submitted_at": "2026-10-26T23:37:44.098852+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 22,
+      "url": "https://neetcode.io/problems/search-2d-matrix/question",
+      "submitted_at": "2026-10-27T16:18:13.509837+00:00"
     }
   ],
   "competition_submissions": [
@@ -957,6 +964,17 @@
       "points": 2,
       "url": "https://leetcode.com/problems/subarray-sum-equals-k/submissions/2182649769/",
       "submitted_at": "2026-10-26T23:37:44.098852+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 22,
+      "problem_slug": "neetcode:search-2d-matrix",
+      "problem_title": "Search a 2D Matrix",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://neetcode.io/problems/search-2d-matrix/question",
+      "submitted_at": "2026-10-27T16:18:13.509837+00:00"
     }
   ],
   "presubmissions": [
