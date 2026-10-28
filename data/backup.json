@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-28T19:47:46.661926+00:00",
+  "updated_at": "2026-10-28T19:47:54.021512+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -353,6 +353,13 @@
       "day": 22,
       "url": "https://leetcode.com/problems/corporate-flight-bookings/submissions/2183474984/",
       "submitted_at": "2026-10-27T22:48:37.498908+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 23,
+      "url": "https://leetcode.com/problems/binary-digit-score/submissions/2184240732",
+      "submitted_at": "2026-10-28T19:47:53.488613+00:00"
     }
   ],
   "competition_submissions": [
@@ -993,6 +1000,17 @@
       "points": 2,
       "url": "https://leetcode.com/problems/corporate-flight-bookings/submissions/2183474984/",
       "submitted_at": "2026-10-27T22:48:37.498908+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 23,
+      "problem_slug": "leetcode:binary-digit-score",
+      "problem_title": "Binary Digit Score",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/binary-digit-score/submissions/2184240732",
+      "submitted_at": "2026-10-28T19:47:53.488613+00:00"
     }
   ],
   "presubmissions": [
