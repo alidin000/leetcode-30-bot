@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-28T22:25:24.366687+00:00",
+  "updated_at": "2026-10-28T22:25:28.412835+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -367,6 +367,13 @@
       "day": 23,
       "url": "https://neetcode.io/problems/depth-of-binary-tree/solution",
       "submitted_at": "2026-10-28T20:07:19.883617+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 23,
+      "url": "https://leetcode.com/problems/daily-temperatures/submissions/2184298402/",
+      "submitted_at": "2026-10-28T22:25:28.190272+00:00"
     }
   ],
   "competition_submissions": [
@@ -1029,6 +1036,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/depth-of-binary-tree/solution",
       "submitted_at": "2026-10-28T20:07:19.883617+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 23,
+      "problem_slug": "leetcode:daily-temperatures",
+      "problem_title": "Daily Temperatures",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/daily-temperatures/submissions/2184298402/",
+      "submitted_at": "2026-10-28T22:25:28.190272+00:00"
     }
   ],
   "presubmissions": [
