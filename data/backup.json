@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-29T22:05:02.919768+00:00",
+  "updated_at": "2026-10-29T22:05:11.106566+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -381,6 +381,13 @@
       "day": 24,
       "url": "https://neetcode.io/problems/same-binary-tree/question",
       "submitted_at": "2026-10-29T21:25:30.956752+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 24,
+      "url": "https://leetcode.com/problems/difference-between-peaks-and-valleys/submissions/2185080076",
+      "submitted_at": "2026-10-29T22:05:10.502813+00:00"
     }
   ],
   "competition_submissions": [
@@ -1065,6 +1072,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/same-binary-tree/question",
       "submitted_at": "2026-10-29T21:25:30.956752+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 24,
+      "problem_slug": "leetcode:difference-between-peaks-and-valleys",
+      "problem_title": "Difference Between Peaks and Valleys",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/difference-between-peaks-and-valleys/submissions/2185080076",
+      "submitted_at": "2026-10-29T22:05:10.502813+00:00"
     }
   ],
   "presubmissions": [
