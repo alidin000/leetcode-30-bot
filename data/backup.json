@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-29T22:55:57.029373+00:00",
+  "updated_at": "2026-10-29T22:56:01.372260+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -388,6 +388,13 @@
       "day": 24,
       "url": "https://leetcode.com/problems/difference-between-peaks-and-valleys/submissions/2185080076",
       "submitted_at": "2026-10-29T22:05:10.502813+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 24,
+      "url": "https://leetcode.com/problems/running-sum-of-1d-array/submissions/2185101128/",
+      "submitted_at": "2026-10-29T22:56:01.151679+00:00"
     }
   ],
   "competition_submissions": [
@@ -1083,6 +1090,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/difference-between-peaks-and-valleys/submissions/2185080076",
       "submitted_at": "2026-10-29T22:05:10.502813+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 24,
+      "problem_slug": "leetcode:running-sum-of-1d-array",
+      "problem_title": "Running Sum of 1d Array",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/running-sum-of-1d-array/submissions/2185101128/",
+      "submitted_at": "2026-10-29T22:56:01.151679+00:00"
     }
   ],
   "presubmissions": [
