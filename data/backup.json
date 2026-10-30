@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-30T23:12:38.196056+00:00",
+  "updated_at": "2026-10-30T23:12:45.951051+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -402,6 +402,13 @@
       "day": 25,
       "url": "https://neetcode.io/problems/invert-a-binary-tree/question",
       "submitted_at": "2026-10-30T18:50:55.717111+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 25,
+      "url": "https://leetcode.com/problems/minimum-deletions-to-make-array-sharp/submissions/2185839378",
+      "submitted_at": "2026-10-30T23:12:45.423795+00:00"
     }
   ],
   "competition_submissions": [
@@ -1119,6 +1126,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/invert-a-binary-tree/question",
       "submitted_at": "2026-10-30T18:50:55.717111+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 25,
+      "problem_slug": "leetcode:minimum-deletions-to-make-array-sharp",
+      "problem_title": "Minimum Deletions to Make Array Sharp",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/minimum-deletions-to-make-array-sharp/submissions/2185839378",
+      "submitted_at": "2026-10-30T23:12:45.423795+00:00"
     }
   ],
   "presubmissions": [
