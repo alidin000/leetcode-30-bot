@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-30T23:12:45.951051+00:00",
+  "updated_at": "2026-10-30T23:12:48.695819+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -1137,6 +1137,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/minimum-deletions-to-make-array-sharp/submissions/2185839378",
       "submitted_at": "2026-10-30T23:12:45.423795+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 25,
+      "problem_slug": "leetcode:last-visited-cell-in-a-directional-grid",
+      "problem_title": "Last Visited Cell in a Directional Grid",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/last-visited-cell-in-a-directional-grid/submissions/2185842650",
+      "submitted_at": "2026-10-30T23:12:48.083856+00:00"
     }
   ],
   "presubmissions": [
