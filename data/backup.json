@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-30T18:50:46.598025+00:00",
+  "updated_at": "2026-10-30T18:50:56.284076+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -395,6 +395,13 @@
       "day": 24,
       "url": "https://leetcode.com/problems/running-sum-of-1d-array/submissions/2185101128/",
       "submitted_at": "2026-10-29T22:56:01.151679+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 25,
+      "url": "https://neetcode.io/problems/invert-a-binary-tree/question",
+      "submitted_at": "2026-10-30T18:50:55.717111+00:00"
     }
   ],
   "competition_submissions": [
@@ -1101,6 +1108,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/running-sum-of-1d-array/submissions/2185101128/",
       "submitted_at": "2026-10-29T22:56:01.151679+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 25,
+      "problem_slug": "neetcode:invert-a-binary-tree",
+      "problem_title": "Invert Binary Tree",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://neetcode.io/problems/invert-a-binary-tree/question",
+      "submitted_at": "2026-10-30T18:50:55.717111+00:00"
     }
   ],
   "presubmissions": [
