@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-31T23:07:02.105644+00:00",
+  "updated_at": "2026-10-31T23:07:08.975047+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -423,6 +423,13 @@
       "day": 26,
       "url": "https://neetcode.io/problems/lru-cache/question",
       "submitted_at": "2026-10-31T20:32:38.228257+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 26,
+      "url": "https://leetcode.com/problems/largest-rectangle-in-histogram/submissions/2186530694/",
+      "submitted_at": "2026-10-31T23:07:08.463774+00:00"
     }
   ],
   "competition_submissions": [
@@ -1184,6 +1191,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/lru-cache/question",
       "submitted_at": "2026-10-31T20:32:38.228257+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 26,
+      "problem_slug": "leetcode:largest-rectangle-in-histogram",
+      "problem_title": "Largest Rectangle in Histogram",
+      "difficulty": "HARD",
+      "points": 4,
+      "url": "https://leetcode.com/problems/largest-rectangle-in-histogram/submissions/2186530694/",
+      "submitted_at": "2026-10-31T23:07:08.463774+00:00"
     }
   ],
   "presubmissions": [
