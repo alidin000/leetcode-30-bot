@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-31T08:36:36.402235+00:00",
+  "updated_at": "2026-10-31T08:36:48.638847+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -409,6 +409,13 @@
       "day": 25,
       "url": "https://leetcode.com/problems/minimum-deletions-to-make-array-sharp/submissions/2185839378",
       "submitted_at": "2026-10-30T23:12:45.423795+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 26,
+      "url": "https://leetcode.com/problems/maximum-product-pair-with-target-sum/submissions/2186048109",
+      "submitted_at": "2026-10-31T08:36:48.402376+00:00"
     }
   ],
   "competition_submissions": [
@@ -1148,6 +1155,17 @@
       "points": 2,
       "url": "https://leetcode.com/problems/last-visited-cell-in-a-directional-grid/submissions/2185842650",
       "submitted_at": "2026-10-30T23:12:48.083856+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 26,
+      "problem_slug": "leetcode:maximum-product-pair-with-target-sum",
+      "problem_title": "Maximum Product Pair With Target Sum",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/maximum-product-pair-with-target-sum/submissions/2186048109",
+      "submitted_at": "2026-10-31T08:36:48.402376+00:00"
     }
   ],
   "presubmissions": [
