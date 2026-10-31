@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-10-31T20:32:33.315335+00:00",
+  "updated_at": "2026-10-31T20:32:38.717128+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -416,6 +416,13 @@
       "day": 26,
       "url": "https://leetcode.com/problems/maximum-product-pair-with-target-sum/submissions/2186048109",
       "submitted_at": "2026-10-31T08:36:48.402376+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 26,
+      "url": "https://neetcode.io/problems/lru-cache/question",
+      "submitted_at": "2026-10-31T20:32:38.228257+00:00"
     }
   ],
   "competition_submissions": [
@@ -1166,6 +1173,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/maximum-product-pair-with-target-sum/submissions/2186048109",
       "submitted_at": "2026-10-31T08:36:48.402376+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 26,
+      "problem_slug": "neetcode:lru-cache",
+      "problem_title": "LRU Cache",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://neetcode.io/problems/lru-cache/question",
+      "submitted_at": "2026-10-31T20:32:38.228257+00:00"
     }
   ],
   "presubmissions": [
