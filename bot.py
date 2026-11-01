@@ -580,27 +580,11 @@ def extract_problem_slug(url):
 
 
 def lookup_neetcode_metadata(problem_slug):
-    """Try public NeetCode problem page metadata; return None to ask for difficulty manually."""
-    page_url = f"https://neetcode.io/problems/{problem_slug}/question"
-    request = Request(page_url, headers={"User-Agent": "Mozilla/5.0"})
-    try:
-        with urlopen(request, timeout=15) as response:
-            page = response.read().decode("utf-8", errors="replace")
-    except (HTTPError, URLError, TimeoutError):
-        logging.warning("Could not read NeetCode metadata for %s", problem_slug)
-        return None
-
-    title_match = re.search(r"<title[^>]*>(.*?)</title>", page, re.I | re.S)
-    title = html.unescape(re.sub(r"\s+", " ", title_match.group(1))).strip() if title_match else ""
-    title = re.sub(r"\s*[-|·]\s*NeetCode.*$", "", title, flags=re.I).strip()
-    difficulty_match = re.search(r"\b(Easy|Medium|Hard)\b", page, re.I)
-    if not title or not difficulty_match:
-        return None
-
-    difficulty = difficulty_match.group(1).upper()
-    if difficulty not in POINTS_BY_DIFFICULTY:
-        return None
-    return {"title": title, "difficulty": difficulty, "points": POINTS_BY_DIFFICULTY[difficulty]}
+    logging.info(
+        "NeetCode difficulty requires manual confirmation for %s; page HTML is not a reliable metadata source.",
+        problem_slug,
+    )
+    return None
 
 
 def lookup_problem_metadata(problem_slug):
