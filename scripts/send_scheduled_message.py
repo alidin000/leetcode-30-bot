@@ -3,8 +3,16 @@ import json
 import os
 import re
 import subprocess
+import sys
 import urllib.parse
 import urllib.request
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from problem_metadata import lookup_problem_metadata as lookup_platform_problem_metadata
 from datetime import datetime, timezone
 from urllib.error import HTTPError, URLError
 
@@ -17,16 +25,6 @@ POINTS_BY_DIFFICULTY = {
     "MEDIUM": 2,
     "HARD": 4,
 }
-LEETCODE_GRAPHQL_API = "https://leetcode.com/graphql"
-QUESTION_METADATA_QUERY = """
-query questionData($titleSlug: String!) {
-  question(titleSlug: $titleSlug) {
-    title
-    difficulty
-  }
-}
-"""
-
 CHALLENGES = [
     ("Two Sum", "https://leetcode.com/problems/two-sum/"),
     ("Valid Parentheses", "https://leetcode.com/problems/valid-parentheses/"),
@@ -144,45 +142,11 @@ def fetch_problem_metadata(problem_slug):
     if problem_slug in _metadata_cache:
         return _metadata_cache[problem_slug]
 
-    platform, raw_slug = problem_slug.split(":", 1) if ":" in problem_slug else ("leetcode", problem_slug)
-    if platform == "neetcode":
-        return None
-
-
-    payload = json.dumps({
-        "query": QUESTION_METADATA_QUERY,
-        "variables": {"titleSlug": raw_slug},
-    }).encode("utf-8")
-    request = urllib.request.Request(
-        LEETCODE_GRAPHQL_API,
-        data=payload,
-        method="POST",
-        headers={
-            "Content-Type": "application/json",
-            "User-Agent": "leetcode-30-bot/2.0",
-            "Referer": f"https://leetcode.com/problems/{raw_slug}/",
-        },
-    )
-
-    try:
-        with urllib.request.urlopen(request, timeout=15) as response:
-            body = json.loads(response.read().decode("utf-8"))
-    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError):
-        return None
-
-    question = (body.get("data") or {}).get("question")
-    difficulty = question.get("difficulty") if question else None
-    title = question.get("title") if question else None
-    if not title or difficulty not in POINTS_BY_DIFFICULTY:
-        return None
-
-    metadata = {
-        "title": title,
-        "difficulty": difficulty,
-        "points": POINTS_BY_DIFFICULTY[difficulty],
-    }
-    _metadata_cache[problem_slug] = metadata
+    metadata = lookup_platform_problem_metadata(problem_slug)
+    if metadata:
+        _metadata_cache[problem_slug] = metadata
     return metadata
+
 
 def build_competition_entries(backup):
     """
@@ -211,13 +175,33 @@ def build_competition_entries(backup):
         points = row.get("points")
         title = row.get("problem_title")
 
-        if difficulty not in POINTS_BY_DIFFICULTY or points is None or not title:
+        try:
+            stored_points = int(points)
+        except (TypeError, ValueError):
+            stored_points = None
+
+        needs_refresh = (
+            problem_slug.startswith("neetcode:")
+            or difficulty not in POINTS_BY_DIFFICULTY
+            or stored_points != POINTS_BY_DIFFICULTY.get(difficulty)
+            or not title
+        )
+        if needs_refresh:
             metadata = fetch_problem_metadata(problem_slug)
-            if not metadata:
+            if metadata:
+                difficulty = metadata["difficulty"]
+                points = metadata["points"]
+                title = metadata["title"]
+            elif (
+                difficulty not in POINTS_BY_DIFFICULTY
+                or stored_points != POINTS_BY_DIFFICULTY.get(difficulty)
+                or not title
+            ):
                 continue
-            difficulty = metadata["difficulty"]
-            points = metadata["points"]
-            title = metadata["title"]
+            else:
+                points = stored_points
+        else:
+            points = stored_points
 
         seen.add(key)
         entries.append({
