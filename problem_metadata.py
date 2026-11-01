@@ -4,7 +4,6 @@ import re
 import threading
 import time
 from html.parser import HTMLParser
-from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
@@ -25,7 +24,7 @@ query questionData($titleSlug: String!) {
 }
 """
 
-USER_AGENT = "leetcode-30-bot/3.0"
+USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
 METADATA_CACHE_TTL_SECONDS = 6 * 60 * 60
 _METADATA_CACHE = {}
 _CACHE_LOCK = threading.Lock()
@@ -95,8 +94,12 @@ def lookup_leetcode_metadata(problem_slug):
     try:
         with urlopen(request, timeout=12) as response:
             body = json.loads(response.read().decode("utf-8"))
-    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError, UnicodeDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         logging.exception("Failed to fetch LeetCode metadata for %s", slug)
+        return None
+
+    if not isinstance(body, dict):
+        logging.warning("LeetCode returned an unexpected response for %s", slug)
         return None
 
     if body.get("errors"):
@@ -104,6 +107,8 @@ def lookup_leetcode_metadata(problem_slug):
         return None
 
     question = (body.get("data") or {}).get("question") or {}
+    if not isinstance(question, dict):
+        return None
     returned_slug = str(question.get("titleSlug") or "").strip().lower()
     if returned_slug != slug:
         logging.warning(
@@ -251,7 +256,7 @@ def lookup_neetcode_metadata(problem_slug):
                 response.headers.get_content_charset() or "utf-8",
                 errors="replace",
             )
-    except (HTTPError, URLError, TimeoutError, UnicodeDecodeError):
+    except (OSError, UnicodeDecodeError):
         logging.exception("Failed to fetch NeetCode metadata for %s", slug)
         return None
 
