@@ -146,27 +146,8 @@ def fetch_problem_metadata(problem_slug):
 
     platform, raw_slug = problem_slug.split(":", 1) if ":" in problem_slug else ("leetcode", problem_slug)
     if platform == "neetcode":
-        request = Request(
-            f"https://neetcode.io/problems/{raw_slug}/question",
-            headers={"User-Agent": "Mozilla/5.0"},
-        )
-        try:
-            with urlopen(request, timeout=15) as response:
-                page = response.read().decode("utf-8", errors="replace")
-        except (HTTPError, URLError, TimeoutError):
-            return None
-        title_match = re.search(r"<title[^>]*>(.*?)</title>", page, re.I | re.S)
-        title = html.unescape(re.sub(r"\s+", " ", title_match.group(1))).strip() if title_match else ""
-        title = re.sub(r"\s*[-|·]\s*NeetCode.*$", "", title, flags=re.I).strip()
-        difficulty_match = re.search(r"\b(Easy|Medium|Hard)\b", page, re.I)
-        if not title or not difficulty_match:
-            return None
-        difficulty = difficulty_match.group(1).upper()
-        if difficulty not in POINTS_BY_DIFFICULTY:
-            return None
-        metadata = {"title": title, "difficulty": difficulty, "points": POINTS_BY_DIFFICULTY[difficulty]}
-        _metadata_cache[problem_slug] = metadata
-        return metadata
+        return None
+
 
     payload = json.dumps({
         "query": QUESTION_METADATA_QUERY,
