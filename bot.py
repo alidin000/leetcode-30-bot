@@ -12,6 +12,9 @@ from zoneinfo import ZoneInfo
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlparse
 from urllib.request import Request, urlopen
+from concurrent.futures import ThreadPoolExecutor
+
+from problem_metadata import lookup_problem_metadata as fetch_platform_problem_metadata
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, MessageHandler, filters
@@ -35,16 +38,6 @@ POINTS_BY_DIFFICULTY = {
     "MEDIUM": 2,
     "HARD": 4,
 }
-LEETCODE_GRAPHQL_API = "https://leetcode.com/graphql"
-QUESTION_METADATA_QUERY = """
-query questionData($titleSlug: String!) {
-  question(titleSlug: $titleSlug) {
-    title
-    difficulty
-  }
-}
-"""
-
 CHALLENGES = [
     ("Two Sum", "https://leetcode.com/problems/two-sum/"),
     ("Valid Parentheses", "https://leetcode.com/problems/valid-parentheses/"),
@@ -142,9 +135,13 @@ def db():
             problem_slug TEXT PRIMARY KEY,
             problem_title TEXT NOT NULL,
             difficulty TEXT NOT NULL,
-            points INTEGER NOT NULL
+            points INTEGER NOT NULL,
+            fetched_at TEXT
         )
     """)
+    metadata_columns = {row[1] for row in conn.execute("PRAGMA table_info(problem_metadata)")}
+    if "fetched_at" not in metadata_columns:
+        conn.execute("ALTER TABLE problem_metadata ADD COLUMN fetched_at TEXT")
     conn.execute("""
         CREATE TABLE IF NOT EXISTS presubmissions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -579,84 +576,130 @@ def extract_problem_slug(url):
     return f"{platform}:{slug}" if platform and slug else None
 
 
-def lookup_neetcode_metadata(problem_slug):
-    logging.info(
-        "NeetCode difficulty requires manual confirmation for %s; page HTML is not a reliable metadata source.",
-        problem_slug,
-    )
-    return None
-
-
 def lookup_problem_metadata(problem_slug):
     platform, raw_slug = problem_slug.split(":", 1) if ":" in problem_slug else ("leetcode", problem_slug)
-    if platform == "neetcode":
-        return lookup_neetcode_metadata(raw_slug)
+    platform = platform.strip().lower()
+    raw_slug = raw_slug.strip().lower()
+    if platform not in {"leetcode", "neetcode"} or not raw_slug:
+        return None
 
-    problem_slug = raw_slug
+    cache_key = f"{platform}:{raw_slug}"
     conn = db()
     cached = conn.execute(
-        "SELECT problem_title, difficulty, points FROM problem_metadata WHERE problem_slug=?",
-        (problem_slug,),
+        "SELECT problem_title, difficulty, points, fetched_at FROM problem_metadata WHERE problem_slug=?",
+        (cache_key,),
     ).fetchone()
     conn.close()
 
-    if cached:
-        return {
-            "title": cached[0],
-            "difficulty": cached[1],
-            "points": cached[2],
-        }
+    if cached and cached[3]:
+        try:
+            fetched_at = datetime.fromisoformat(cached[3])
+            if fetched_at.tzinfo is None:
+                fetched_at = fetched_at.replace(tzinfo=timezone.utc)
+            age_seconds = (datetime.now(timezone.utc) - fetched_at).total_seconds()
+            difficulty = str(cached[1]).upper()
+            points = int(cached[2])
+            if (
+                0 <= age_seconds < 24 * 60 * 60
+                and difficulty in POINTS_BY_DIFFICULTY
+                and points == POINTS_BY_DIFFICULTY[difficulty]
+                and cached[0]
+            ):
+                return {
+                    "title": cached[0],
+                    "difficulty": difficulty,
+                    "points": points,
+                }
+        except (TypeError, ValueError):
+            pass
 
-    payload = json.dumps({
-        "query": QUESTION_METADATA_QUERY,
-        "variables": {"titleSlug": problem_slug},
-    }).encode("utf-8")
-    request = Request(
-        LEETCODE_GRAPHQL_API,
-        data=payload,
-        method="POST",
-        headers={
-            "Content-Type": "application/json",
-            "User-Agent": "leetcode-30-bot/2.0",
-            "Referer": f"https://leetcode.com/problems/{problem_slug}/",
-        },
-    )
-
-    try:
-        with urlopen(request, timeout=15) as response:
-            body = json.loads(response.read().decode("utf-8"))
-    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError):
-        logging.exception("Failed to fetch LeetCode metadata for %s", problem_slug)
+    metadata = fetch_platform_problem_metadata(cache_key)
+    if not metadata:
         return None
 
-    question = (body.get("data") or {}).get("question") or {}
-    title = question.get("title")
-    difficulty = str(question.get("difficulty") or "").strip().upper()
-
-    if not title or difficulty not in POINTS_BY_DIFFICULTY:
-        logging.warning(
-            "No usable LeetCode metadata for %s: title=%r difficulty=%r",
-            problem_slug,
-            title,
-            question.get("difficulty"),
-        )
-        return None
-
-    title = str(title).strip()
-    points = POINTS_BY_DIFFICULTY[difficulty]
-
+    fetched_at = datetime.now(timezone.utc).isoformat()
     conn = db()
     conn.execute(
         """
-        INSERT OR REPLACE INTO problem_metadata(problem_slug,problem_title,difficulty,points)
-        VALUES(?,?,?,?)
+        INSERT OR REPLACE INTO problem_metadata(
+            problem_slug,problem_title,difficulty,points,fetched_at
+        ) VALUES(?,?,?,?,?)
         """,
-        (problem_slug, title, difficulty, points),
+        (
+            cache_key,
+            metadata["title"],
+            metadata["difficulty"],
+            metadata["points"],
+            fetched_at,
+        ),
     )
     conn.commit()
     conn.close()
+    return metadata
 
-    return {"title": title, "difficulty": difficulty, "points": points}
+
+def refresh_neetcode_competition_metadata():
+    conn = db()
+    rows = conn.execute(
+        """
+        SELECT DISTINCT problem_slug
+        FROM competition_submissions
+        WHERE problem_slug LIKE 'neetcode:%'
+        """
+    ).fetchall()
+    conn.close()
+
+    problem_slugs = [row[0] for row in rows]
+    if not problem_slugs:
+        return 0
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        metadata_results = list(
+            executor.map(fetch_platform_problem_metadata, problem_slugs)
+        )
+
+    fetched_at = datetime.now(timezone.utc).isoformat()
+    conn = db()
+    updated = 0
+    for problem_slug, metadata in zip(problem_slugs, metadata_results):
+        if not metadata:
+            continue
+        cursor = conn.execute(
+            """
+            UPDATE competition_submissions
+            SET problem_title=?, difficulty=?, points=?
+            WHERE problem_slug=?
+            """,
+            (
+                metadata["title"],
+                metadata["difficulty"],
+                metadata["points"],
+                problem_slug,
+            ),
+        )
+        updated += cursor.rowcount
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO problem_metadata(
+                problem_slug,problem_title,difficulty,points,fetched_at
+            ) VALUES(?,?,?,?,?)
+            """,
+            (
+                problem_slug,
+                metadata["title"],
+                metadata["difficulty"],
+                metadata["points"],
+                fetched_at,
+            ),
+        )
+    conn.commit()
+    conn.close()
+
+    logging.info(
+        "Revalidated NeetCode metadata for %s stored competition problems.",
+        updated,
+    )
+    return updated
 
 
 def backfill_competition_submissions():
@@ -1569,6 +1612,7 @@ def main():
     restored = restore_with_retries()
     if restored:
         backfill_competition_submissions()
+        refresh_neetcode_competition_metadata()
         normalize_submission_days()
         conn = db()
         conn.execute(
