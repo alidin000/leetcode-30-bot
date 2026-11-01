@@ -128,6 +128,11 @@ def lookup_leetcode_metadata(problem_slug):
 
 
 class _NeetCodePageParser(HTMLParser):
+    VOID_TAGS = {
+        "area", "base", "br", "col", "embed", "hr", "img", "input",
+        "link", "meta", "param", "source", "track", "wbr",
+    }
+
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.canonical_url = None
@@ -143,7 +148,8 @@ class _NeetCodePageParser(HTMLParser):
             self.canonical_url = attributes.get("href") or self.canonical_url
 
         if self._active_capture is not None:
-            self._active_capture["depth"] += 1
+            if tag not in self.VOID_TAGS:
+                self._active_capture["depth"] += 1
             return
 
         if tag == "span" and "difficulty-pill" in classes:
@@ -168,7 +174,7 @@ class _NeetCodePageParser(HTMLParser):
             self._active_capture["parts"].append(data)
 
     def handle_endtag(self, tag):
-        if self._active_capture is None:
+        if self._active_capture is None or tag in self.VOID_TAGS:
             return
 
         self._active_capture["depth"] -= 1
