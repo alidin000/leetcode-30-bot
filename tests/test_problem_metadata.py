@@ -1,6 +1,9 @@
+import json
 import unittest
+from unittest.mock import MagicMock, patch
 
-from problem_metadata import parse_neetcode_html
+import problem_metadata
+from problem_metadata import lookup_leetcode_metadata, parse_neetcode_html
 
 
 def page(slug, title, class_difficulty, text_difficulty):
@@ -19,6 +22,46 @@ def page(slug, title, class_difficulty, text_difficulty):
 
 
 class NeetCodeMetadataTests(unittest.TestCase):
+
+    @patch("problem_metadata.urlopen")
+    def test_leetcode_graphql_metadata(self, mock_urlopen):
+        problem_metadata._METADATA_CACHE.clear()
+        response = MagicMock()
+        response.read.return_value = json.dumps({
+            "data": {
+                "question": {
+                    "title": "Two Sum",
+                    "titleSlug": "two-sum",
+                    "difficulty": "Easy",
+                }
+            }
+        }).encode("utf-8")
+        mock_urlopen.return_value.__enter__.return_value = response
+
+        result = lookup_leetcode_metadata("two-sum")
+
+        self.assertEqual(
+            result,
+            {"title": "Two Sum", "difficulty": "EASY", "points": 1},
+        )
+
+    @patch("problem_metadata.urlopen")
+    def test_leetcode_rejects_wrong_returned_slug(self, mock_urlopen):
+        problem_metadata._METADATA_CACHE.clear()
+        response = MagicMock()
+        response.read.return_value = json.dumps({
+            "data": {
+                "question": {
+                    "title": "Another Problem",
+                    "titleSlug": "another-problem",
+                    "difficulty": "Easy",
+                }
+            }
+        }).encode("utf-8")
+        mock_urlopen.return_value.__enter__.return_value = response
+
+        self.assertIsNone(lookup_leetcode_metadata("two-sum"))
+
     def test_easy_problem(self):
         result = parse_neetcode_html(
             page("binary-tree-diameter", "Diameter of Binary Tree", "easy", "Easy"),
