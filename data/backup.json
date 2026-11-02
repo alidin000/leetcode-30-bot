@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-11-02T20:45:45.687040+00:00",
+  "updated_at": "2026-11-02T20:45:58.799832+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -444,6 +444,13 @@
       "day": 27,
       "url": "https://leetcode.com/problems/minimum-value-of-merged-integers/submissions/2187180377",
       "submitted_at": "2026-11-01T18:09:52.368145+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 28,
+      "url": "https://leetcode.com/problems/rearrange-array-by-removing-distinct-values/submissions/2188080383",
+      "submitted_at": "2026-11-02T20:45:58.578226+00:00"
     }
   ],
   "competition_submissions": [
@@ -1238,6 +1245,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/minimum-value-of-merged-integers/submissions/2187180377",
       "submitted_at": "2026-11-01T18:09:52.368145+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 28,
+      "problem_slug": "leetcode:rearrange-array-by-removing-distinct-values",
+      "problem_title": "Rearrange Array by Removing Distinct Values",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/rearrange-array-by-removing-distinct-values/submissions/2188080383",
+      "submitted_at": "2026-11-02T20:45:58.578226+00:00"
     }
   ],
   "presubmissions": [
