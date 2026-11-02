@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-11-02T20:45:58.799832+00:00",
+  "updated_at": "2026-11-02T20:50:39.808261+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -451,6 +451,13 @@
       "day": 28,
       "url": "https://leetcode.com/problems/rearrange-array-by-removing-distinct-values/submissions/2188080383",
       "submitted_at": "2026-11-02T20:45:58.578226+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 28,
+      "url": "https://neetcode.io/problems/find-minimum-in-rotated-sorted-array/question",
+      "submitted_at": "2026-11-02T20:50:39.164583+00:00"
     }
   ],
   "competition_submissions": [
@@ -1256,6 +1263,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/rearrange-array-by-removing-distinct-values/submissions/2188080383",
       "submitted_at": "2026-11-02T20:45:58.578226+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 28,
+      "problem_slug": "neetcode:find-minimum-in-rotated-sorted-array",
+      "problem_title": "Find Minimum in Rotated Sorted Array",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://neetcode.io/problems/find-minimum-in-rotated-sorted-array/question",
+      "submitted_at": "2026-11-02T20:50:39.164583+00:00"
     }
   ],
   "presubmissions": [
