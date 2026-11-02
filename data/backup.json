@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-11-02T21:09:03.761437+00:00",
+  "updated_at": "2026-11-02T21:09:09.402607+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -1274,6 +1274,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/find-minimum-in-rotated-sorted-array/question",
       "submitted_at": "2026-11-02T20:50:39.164583+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 28,
+      "problem_slug": "leetcode:evaluate-reverse-polish-notation",
+      "problem_title": "Evaluate Reverse Polish Notation",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/evaluate-reverse-polish-notation/submissions/2188107570",
+      "submitted_at": "2026-11-02T21:09:09.145451+00:00"
     }
   ],
   "presubmissions": [
