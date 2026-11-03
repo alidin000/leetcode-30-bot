@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-11-03T23:55:40.689621+00:00",
+  "updated_at": "2026-11-03T23:55:53.889285+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -479,6 +479,13 @@
       "day": 29,
       "url": "https://neetcode.io/problems/find-target-in-rotated-sorted-array/question",
       "submitted_at": "2026-11-03T22:01:41.804977+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 29,
+      "url": "https://leetcode.com/problems/search-insert-position/submissions/2188979559/",
+      "submitted_at": "2026-11-03T23:55:53.270736+00:00"
     }
   ],
   "competition_submissions": [
@@ -1350,6 +1357,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/find-target-in-rotated-sorted-array/question",
       "submitted_at": "2026-11-03T22:01:41.804977+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 29,
+      "problem_slug": "leetcode:search-insert-position",
+      "problem_title": "Search Insert Position",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/search-insert-position/submissions/2188979559/",
+      "submitted_at": "2026-11-03T23:55:53.270736+00:00"
     }
   ],
   "presubmissions": [
