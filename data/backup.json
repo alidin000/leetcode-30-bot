@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-11-03T22:01:27.976497+00:00",
+  "updated_at": "2026-11-03T22:01:42.384459+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -472,6 +472,13 @@
       "day": 29,
       "url": "https://leetcode.com/problems/exclusive-time-of-functions/submissions/2188335942",
       "submitted_at": "2026-11-03T07:17:05.113720+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 29,
+      "url": "https://neetcode.io/problems/find-target-in-rotated-sorted-array/question",
+      "submitted_at": "2026-11-03T22:01:41.804977+00:00"
     }
   ],
   "competition_submissions": [
@@ -1332,6 +1339,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/final-prices-with-a-special-discount-in-a-shop/submissions/2188349450",
       "submitted_at": "2026-11-03T07:17:07.819855+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 29,
+      "problem_slug": "neetcode:find-target-in-rotated-sorted-array",
+      "problem_title": "Search in Rotated Sorted Array",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://neetcode.io/problems/find-target-in-rotated-sorted-array/question",
+      "submitted_at": "2026-11-03T22:01:41.804977+00:00"
     }
   ],
   "presubmissions": [
