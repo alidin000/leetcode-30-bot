@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-11-03T07:17:05.658232+00:00",
+  "updated_at": "2026-11-03T07:17:08.364493+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -1321,6 +1321,17 @@
       "points": 2,
       "url": "https://leetcode.com/problems/exclusive-time-of-functions/submissions/2188335942",
       "submitted_at": "2026-11-03T07:17:05.113720+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 29,
+      "problem_slug": "leetcode:final-prices-with-a-special-discount-in-a-shop",
+      "problem_title": "Final Prices With a Special Discount in a Shop",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/final-prices-with-a-special-discount-in-a-shop/submissions/2188349450",
+      "submitted_at": "2026-11-03T07:17:07.819855+00:00"
     }
   ],
   "presubmissions": [
