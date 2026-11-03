@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-11-03T07:16:55.130710+00:00",
+  "updated_at": "2026-11-03T07:17:05.658232+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -465,6 +465,13 @@
       "day": 28,
       "url": "https://leetcode.com/problems/remove-element/submissions/2188149424/",
       "submitted_at": "2026-11-02T23:42:56.975946+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 29,
+      "url": "https://leetcode.com/problems/exclusive-time-of-functions/submissions/2188335942",
+      "submitted_at": "2026-11-03T07:17:05.113720+00:00"
     }
   ],
   "competition_submissions": [
@@ -1303,6 +1310,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/remove-element/submissions/2188149424/",
       "submitted_at": "2026-11-02T23:42:56.975946+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 29,
+      "problem_slug": "leetcode:exclusive-time-of-functions",
+      "problem_title": "Exclusive Time of Functions",
+      "difficulty": "MEDIUM",
+      "points": 2,
+      "url": "https://leetcode.com/problems/exclusive-time-of-functions/submissions/2188335942",
+      "submitted_at": "2026-11-03T07:17:05.113720+00:00"
     }
   ],
   "presubmissions": [
