@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-11-04T23:24:15.738088+00:00",
+  "updated_at": "2026-11-04T23:24:21.899475+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -493,6 +493,13 @@
       "day": 30,
       "url": "https://neetcode.io/problems/time-based-key-value-store/question",
       "submitted_at": "2026-11-04T19:07:56.226844+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 30,
+      "url": "https://leetcode.com/problems/contains-duplicate/submissions/2189694439/",
+      "submitted_at": "2026-11-04T23:24:21.411966+00:00"
     }
   ],
   "competition_submissions": [
@@ -1386,6 +1393,17 @@
       "points": 2,
       "url": "https://neetcode.io/problems/time-based-key-value-store/question",
       "submitted_at": "2026-11-04T19:07:56.226844+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 30,
+      "problem_slug": "leetcode:contains-duplicate",
+      "problem_title": "Contains Duplicate",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/contains-duplicate/submissions/2189694439/",
+      "submitted_at": "2026-11-04T23:24:21.411966+00:00"
     }
   ],
   "presubmissions": [
