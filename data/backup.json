@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-11-05T21:51:19.162929+00:00",
+  "updated_at": "2026-11-05T21:53:38.696137+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -1399,5 +1399,6 @@
       "used_at": null,
       "used_day": null
     }
-  ]
+  ],
+  "monthly_reports": []
 }
