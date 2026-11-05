@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from urllib.error import HTTPError, URLError
 
 TIMEZONE = timezone.utc
-START_DATE = datetime.fromisoformat("2026-10-06").date()
+START_DATE = datetime.fromisoformat("2026-11-01").date()
 AI_FILE = "ai/daily_content.json"
 
 POINTS_BY_DIFFICULTY = {
@@ -59,8 +59,11 @@ CHALLENGES = [
 ]
 
 def current_day():
-    today = datetime.now(timezone.utc).date()
-    return min(30, max(1, (today - START_DATE).days + 1))
+    return datetime.now(timezone.utc).date().toordinal()
+
+
+def challenge_day_number(day):
+    return (datetime.fromordinal(int(day)).date() - START_DATE).days + 1
 
 
 def scheduled_day(selected_mode):
@@ -77,12 +80,13 @@ def scheduled_day(selected_mode):
         if selected_mode == "penalty" or now.hour < 12:
             reference_date = reference_date.fromordinal(reference_date.toordinal() - 1)
 
-    return min(30, max(1, (reference_date - START_DATE).days + 1))
+    return reference_date.toordinal()
 
 def challenge(day):
     import random
     shuffled = random.Random(START_DATE.toordinal()).sample(CHALLENGES, len(CHALLENGES))
-    return shuffled[(day - 1) % len(shuffled)]
+    day_number = challenge_day_number(day)
+    return shuffled[(day_number - 1) % len(shuffled)]
 
 def load_backup():
     raw = subprocess.check_output(
@@ -207,7 +211,12 @@ def build_competition_entries(backup):
         entries.append({
             "chat_id": chat_id,
             "user_id": user_id,
-            "day": int(row.get("day", 0)),
+            "day": (
+                datetime.fromisoformat(row["submitted_at"].replace("Z", "+00:00"))
+                .astimezone(timezone.utc).date().toordinal()
+                if row.get("submitted_at")
+                else int(row.get("day", 0))
+            ),
             "problem_slug": problem_slug,
             "problem_title": title,
             "difficulty": difficulty,
@@ -218,12 +227,14 @@ def build_competition_entries(backup):
 
     return entries
 
-def leaderboard_for_chat(entries, users, chat_id, day=None):
+def leaderboard_for_chat(entries, users, chat_id, day=None, month=None):
     by_user = {}
     for entry in entries:
         if str(entry["chat_id"]) != str(chat_id):
             continue
         if day is not None and entry["day"] != day:
+            continue
+        if month is not None and datetime.fromordinal(entry["day"]).strftime("%Y-%m") != month:
             continue
         key = entry["user_id"]
         bucket = by_user.setdefault(key, {"questions": 0, "points": 0})
@@ -257,7 +268,7 @@ def leaderboard_for_chat(entries, users, chat_id, day=None):
 def morning_text(day):
     name, url = challenge(day)
     return (
-        f"🌅 <b>Day {day}/30 — LeetCode Competition</b>\n\n"
+        f"🌅 <b>Day {challenge_day_number(day)} — LeetCode Competition</b>\n\n"
         f"🧠 <b>Official challenge: {html.escape(name)}</b>\n"
         f"{url}\n\n"
         "⚔️ <b>Competition rules</b>\n"
@@ -265,7 +276,7 @@ def morning_text(day):
         "🟢 Easy = 1 point\n"
         "🟠 Medium = 2 points\n"
         "🔴 Hard = 4 points\n\n"
-        "🚫 The same problem can only score once per participant during the 30-day challenge.\n"
+        "🚫 The same problem can only score once per participant.\n"
         "🏆 At the end of the day, the highest score wins."
     )
 
@@ -318,17 +329,21 @@ def winner_lines(rows):
 def evening_text(day, entries, users, chat_id):
     name, url = challenge(day)
     daily_rows = leaderboard_for_chat(entries, users, chat_id, day)
+    month = datetime.fromordinal(day).strftime("%Y-%m")
+    monthly_rows = leaderboard_for_chat(entries, users, chat_id, month=month)
     overall_rows = leaderboard_for_chat(entries, users, chat_id)
 
     lines = [
-        f"🏆 <b>Day {day}/30 — Competition Results</b>",
+        f"🏆 <b>Day {challenge_day_number(day)} — Competition Results</b>",
         "",
         f"🧠 Official challenge: <b>{html.escape(name)}</b>",
         f'<a href="{html.escape(url, quote=True)}">Open problem</a>',
         "",
-        *render_leaderboard("📅 <b>Daily leaderboard</b>", daily_rows),
+        *render_leaderboard("📅 <b>Today’s leaderboard</b>", daily_rows),
         "",
         *winner_lines(daily_rows),
+        "",
+        *render_leaderboard("🗓 <b>This month</b>", monthly_rows, total=True),
         "",
         *render_leaderboard("🏆 <b>Overall leaderboard</b>", overall_rows, total=True),
         "",
@@ -350,7 +365,7 @@ def penalty_text(day, users, backup, chat_id):
         if (str(chat_id), str(row.get("user_id")), day) not in participation
     ]
     lines = [
-        f"💶 <b>Day {day}/30 — Penalty report</b>",
+        f"💶 <b>Day {challenge_day_number(day)} — Penalty report</b>",
         "",
         "Rule: missing the day means sending €1 to every other registered participant.",
         "",
@@ -380,7 +395,7 @@ def penalty_text(day, users, backup, chat_id):
         recipients = [row for row in registered if row.get("user_id") != payer.get("user_id")]
         total = len(recipients)
         lines.append("")
-        lines.append(f"• <b>{html.escape(payer_name)}</b> (@{html.escape(payer_revolut)}) missed Day {day}.")
+        lines.append(f"• <b>{html.escape(payer_name)}</b> (@{html.escape(payer_revolut)}) missed Day {challenge_day_number(day)}.")
         if not recipients:
             lines.append("No other registered recipients.")
             continue
