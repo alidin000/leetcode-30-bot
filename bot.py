@@ -154,6 +154,14 @@ def db():
             used_day INTEGER
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS monthly_reports (
+            chat_id INTEGER NOT NULL,
+            month TEXT NOT NULL,
+            sent_at TEXT NOT NULL,
+            PRIMARY KEY(chat_id, month)
+        )
+    """)
     conn.commit()
     return conn
 
@@ -241,6 +249,10 @@ def backup_to_github():
         {"id": row[0], "chat_id": row[1], "user_id": row[2], "url": row[3], "problem_slug": row[4], "created_at": row[5], "used_at": row[6], "used_day": row[7]}
         for row in conn.execute("SELECT id, chat_id, user_id, url, problem_slug, created_at, used_at, used_day FROM presubmissions").fetchall()
     ]
+    current_monthly_reports = [
+        {"chat_id": row[0], "month": row[1], "sent_at": row[2]}
+        for row in conn.execute("SELECT chat_id, month, sent_at FROM monthly_reports").fetchall()
+    ]
     conn.close()
 
     existing = github_request(
@@ -322,6 +334,11 @@ def backup_to_github():
             ("chat_id", "user_id", "problem_slug"),
         ),
         "presubmissions": clean_presubmissions,
+        "monthly_reports": merge_records(
+            remote_backup.get("monthly_reports", []),
+            current_monthly_reports,
+            ("chat_id", "month"),
+        ),
     }
 
     content = base64.b64encode(
@@ -426,6 +443,13 @@ def restore_from_github():
         VALUES(?,?,?,?,?,?,?,?)""",
         [(row.get("id"), row["chat_id"], row["user_id"], row["url"], row["problem_slug"], row["created_at"], row.get("used_at"), row.get("used_day"))
          for row in backup.get("presubmissions", []) if row.get("url") and row.get("problem_slug") and row.get("created_at")],
+    )
+    conn.executemany(
+        "INSERT OR IGNORE INTO monthly_reports(chat_id,month,sent_at) VALUES(?,?,?)",
+        [
+            (row["chat_id"], row["month"], row["sent_at"])
+            for row in backup.get("monthly_reports", [])
+        ],
     )
     conn.execute(
         """DELETE FROM presubmissions
@@ -1008,32 +1032,32 @@ async def progress(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.effective_message.reply_text("\n".join(message))
 
 
-def leaderboard_rows(chat_id, day=None):
+def leaderboard_rows(chat_id, day=None, month=None):
     conn = db()
-    if day is None:
-        rows = conn.execute("""
-            SELECT u.first_name, u.username,
-                   COUNT(s.id) AS solved,
-                   COALESCE(SUM(s.points), 0) AS points
-            FROM users u
-            LEFT JOIN competition_submissions s
-              ON s.chat_id=u.chat_id AND s.user_id=u.user_id
-            WHERE u.chat_id=?
-            GROUP BY u.user_id
-            ORDER BY points DESC, solved DESC, u.first_name ASC
-        """, (chat_id,)).fetchall()
+    if day is not None:
+        where = "AND s.day=?"
+        params = (day, chat_id)
+    elif month is not None:
+        where = "AND s.day>=? AND s.day<?"
+        year, month_number = map(int, month.split("-"))
+        first = datetime(year, month_number, 1).date().toordinal()
+        next_month = datetime(year + (month_number == 12), month_number % 12 + 1, 1).date().toordinal()
+        params = (first, next_month, chat_id)
     else:
-        rows = conn.execute("""
-            SELECT u.first_name, u.username,
-                   COUNT(s.id) AS solved,
-                   COALESCE(SUM(s.points), 0) AS points
-            FROM users u
-            LEFT JOIN competition_submissions s
-              ON s.chat_id=u.chat_id AND s.user_id=u.user_id AND s.day=?
-            WHERE u.chat_id=?
-            GROUP BY u.user_id
-            ORDER BY points DESC, solved DESC, u.first_name ASC
-        """, (day, chat_id)).fetchall()
+        where = ""
+        params = (chat_id,)
+
+    rows = conn.execute(f"""
+        SELECT u.first_name, u.username,
+               COUNT(s.id) AS solved,
+               COALESCE(SUM(s.points), 0) AS points
+        FROM users u
+        LEFT JOIN competition_submissions s
+          ON s.chat_id=u.chat_id AND s.user_id=u.user_id {where}
+        WHERE u.chat_id=?
+        GROUP BY u.user_id
+        ORDER BY points DESC, solved DESC, u.first_name ASC
+    """, params).fetchall()
     conn.close()
     return rows
 
@@ -1056,7 +1080,8 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     day = current_day()
 
-    daily_rows = leaderboard_rows(chat_id, day)
+    daily_rows = leaderboard_rows(chat_id, day=day)
+    monthly_rows = leaderboard_rows(chat_id, month=day_date(day).strftime("%Y-%m"))
     overall_rows = leaderboard_rows(chat_id)
 
     message = [
@@ -1064,7 +1089,9 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "",
         *leaderboard_section("📅 TODAY", daily_rows),
         "",
-        *leaderboard_section("🏆 OVERALL", overall_rows),
+        *leaderboard_section("🗓 THIS MONTH", monthly_rows),
+        "",
+        *leaderboard_section("🏆 ALL-TIME", overall_rows),
     ]
 
     if daily_rows:
@@ -1541,6 +1568,74 @@ async def submission(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await record_submission(update, match.group(0), context)
 
 
+def previous_month_key():
+    today = datetime.now(TIMEZONE).date()
+    first = today.replace(day=1)
+    previous = first.fromordinal(first.toordinal() - 1)
+    return previous.strftime("%Y-%m")
+
+
+def monthly_celebration_text(chat_id, month):
+    rows = leaderboard_rows(chat_id, month=month)
+    active = [(name, username, solved, points) for name, username, solved, points in rows if solved > 0]
+    title = datetime.strptime(month, "%Y-%m").strftime("%B %Y").upper()
+    medals = ("🥇", "🥈", "🥉")
+    lines = [
+        "🎊🏆🎊 MONTHLY LEETCODE CHAMPIONSHIP 🎊🏆🎊",
+        f"✨ {title} — FINAL RESULTS ✨",
+        "",
+    ]
+    if not active:
+        lines.append("No scored questions this month. A new month is a fresh start! 💪")
+    else:
+        for index, (name, username, solved, points) in enumerate(active):
+            medal = medals[index] if index < 3 else "🌟"
+            display = f"@{username}" if username else name
+            lines.append(f"{medal} {display} — {solved} questions · {points} pts")
+        total_questions = sum(row[2] for row in active)
+        total_points = sum(row[3] for row in active)
+        lines.extend([
+            "",
+            f"❤️ Together: {total_questions} questions · {total_points} points!",
+            "",
+            f"👑 MONTHLY CHAMPION: {'@' + active[0][1] if active[0][1] else active[0][0]}",
+            "🎉 Congratulations to everyone who showed up and kept learning!",
+            "🚀 New month, new goals — let's keep the momentum going!",
+        ])
+    return "\n".join(lines)
+
+
+async def monthly_celebration(context: ContextTypes.DEFAULT_TYPE):
+    if not await asyncio.to_thread(restore_with_retries, 1):
+        logging.warning("Skipping monthly results because GitHub restore failed.")
+        return
+    month = previous_month_key()
+    conn = db()
+    chats = [row[0] for row in conn.execute("SELECT DISTINCT chat_id FROM users").fetchall()]
+    conn.close()
+    for chat_id in chats:
+        conn = db()
+        sent = conn.execute(
+            "SELECT 1 FROM monthly_reports WHERE chat_id=? AND month=?",
+            (chat_id, month),
+        ).fetchone()
+        conn.close()
+        if sent:
+            continue
+        try:
+            await context.bot.send_message(chat_id=chat_id, text=monthly_celebration_text(chat_id, month))
+            conn = db()
+            conn.execute(
+                "INSERT OR IGNORE INTO monthly_reports(chat_id,month,sent_at) VALUES(?,?,?)",
+                (chat_id, month, datetime.now(timezone.utc).isoformat()),
+            )
+            conn.commit()
+            conn.close()
+            await asyncio.to_thread(backup_to_github)
+        except Exception:
+            logging.exception("Failed to send monthly celebration for chat %s, month %s", chat_id, month)
+
+
 def incomplete_users(chat_id, day):
     conn = db()
     rows = conn.execute(
@@ -1679,6 +1774,11 @@ def main():
         daily_reminder,
         time=time(hour=9, minute=0, tzinfo=TIMEZONE),
         name="morning_reminder",
+    )
+    app.job_queue.run_daily(
+        monthly_celebration,
+        time=time(hour=9, minute=5, tzinfo=TIMEZONE),
+        name="monthly_celebration",
     )
     app.job_queue.run_daily(
         daily_reminder,
