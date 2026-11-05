@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-11-05T23:41:19.431808+00:00",
+  "updated_at": "2026-11-05T23:41:25.414979+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -493,6 +493,13 @@
       "day": 739925,
       "url": "https://neetcode.io/problems/balanced-binary-tree/question",
       "submitted_at": "2026-11-05T21:58:17.316448+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 739925,
+      "url": "https://leetcode.com/problems/minimum-queen-moves-to-reach-target/submissions/2190391368",
+      "submitted_at": "2026-11-05T23:41:24.874284+00:00"
     }
   ],
   "competition_submissions": [
@@ -1419,6 +1426,17 @@
       "points": 1,
       "url": "https://neetcode.io/problems/balanced-binary-tree/question",
       "submitted_at": "2026-11-05T21:58:17.316448+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 739925,
+      "problem_slug": "leetcode:minimum-queen-moves-to-reach-target",
+      "problem_title": "Minimum Queen Moves to Reach Target",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/minimum-queen-moves-to-reach-target/submissions/2190391368",
+      "submitted_at": "2026-11-05T23:41:24.874284+00:00"
     }
   ],
   "presubmissions": [
