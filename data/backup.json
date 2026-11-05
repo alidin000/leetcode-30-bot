@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-11-05T21:53:38.696137+00:00",
+  "updated_at": "2026-11-05T21:56:20.683575+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -147,7 +147,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739905,
+      "day": 739904,
       "url": "https://leetcode.com/problems/max-consecutive-ones-iii/submissions/2173406116/",
       "submitted_at": "2026-10-15T22:00:50.902146+00:00"
     },
@@ -161,7 +161,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 891132706,
-      "day": 739906,
+      "day": 739905,
       "url": "https://leetcode.com/problems/nim-game/submissions/2174195424",
       "submitted_at": "2026-10-16T23:21:28.885677+00:00"
     },
@@ -189,7 +189,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739909,
+      "day": 739908,
       "url": "https://leetcode.com/problems/consecutive-characters/submissions/2176616936/",
       "submitted_at": "2026-10-19T22:10:27.882682+00:00"
     },
@@ -252,14 +252,14 @@
     {
       "chat_id": -5554078333,
       "user_id": 891132706,
-      "day": 739914,
+      "day": 739913,
       "url": "https://leetcode.com/problems/solving-questions-with-brainpower/submissions/2180885074",
       "submitted_at": "2026-10-24T22:11:06.195685+00:00"
     },
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739914,
+      "day": 739913,
       "url": "https://leetcode.com/problems/get-equal-substrings-within-budget/submissions/2180894839/",
       "submitted_at": "2026-10-24T22:46:30.532584+00:00"
     },
@@ -273,7 +273,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739915,
+      "day": 739914,
       "url": "https://leetcode.com/problems/range-sum-query-immutable/submissions/2181779822/?utm_source=chatgpt.com",
       "submitted_at": "2026-10-25T23:17:38.799007+00:00"
     },
@@ -294,7 +294,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739916,
+      "day": 739915,
       "url": "https://leetcode.com/problems/subarray-sum-equals-k/submissions/2182649769/",
       "submitted_at": "2026-10-26T23:37:44.098852+00:00"
     },
@@ -357,7 +357,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 891132706,
-      "day": 739920,
+      "day": 739919,
       "url": "https://leetcode.com/problems/minimum-deletions-to-make-array-sharp/submissions/2185839378",
       "submitted_at": "2026-10-30T23:12:45.423795+00:00"
     },
@@ -371,7 +371,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739921,
+      "day": 739920,
       "url": "https://leetcode.com/problems/largest-rectangle-in-histogram/submissions/2186530694/",
       "submitted_at": "2026-10-31T23:07:08.463774+00:00"
     },
@@ -406,7 +406,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739923,
+      "day": 739922,
       "url": "https://leetcode.com/problems/remove-element/submissions/2188149424/",
       "submitted_at": "2026-11-02T23:42:56.975946+00:00"
     },
@@ -427,7 +427,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739924,
+      "day": 739923,
       "url": "https://leetcode.com/problems/search-insert-position/submissions/2188979559/",
       "submitted_at": "2026-11-03T23:55:53.270736+00:00"
     },
@@ -441,16 +441,51 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739925,
+      "day": 739924,
       "url": "https://leetcode.com/problems/contains-duplicate/submissions/2189694439/",
       "submitted_at": "2026-11-04T23:24:21.411966+00:00"
     },
     {
       "chat_id": -5554078333,
       "user_id": 891132706,
-      "day": 739925,
+      "day": 739924,
       "url": "https://leetcode.com/problems/daily-temperatures/submissions/2189695295",
       "submitted_at": "2026-11-04T23:27:00.068688+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 739900,
+      "url": "https://leetcode.com/problems/sort-colors/submissions/2169694273/",
+      "submitted_at": "2026-10-11T22:36:35.493572+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 739902,
+      "url": "https://leetcode.com/problems/construct-the-rectangle/submissions/2171622231/",
+      "submitted_at": "2026-10-13T22:06:56.598529+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 739914,
+      "url": "https://leetcode.com/problems/longest-increasing-subsequence/submissions/2181198372",
+      "submitted_at": "2026-10-25T07:43:34.381974+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 739916,
+      "url": "https://leetcode.com/problems/corporate-flight-bookings/submissions/2183474984/",
+      "submitted_at": "2026-10-27T22:48:37.498908+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 891132706,
+      "day": 739920,
+      "url": "https://leetcode.com/problems/maximum-product-pair-with-target-sum/submissions/2186048109",
+      "submitted_at": "2026-10-31T08:36:48.402376+00:00"
     }
   ],
   "competition_submissions": [
@@ -589,7 +624,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739901,
+      "day": 739900,
       "problem_slug": "sort-colors",
       "problem_title": "Sort Colors",
       "difficulty": "MEDIUM",
@@ -644,7 +679,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 891132706,
-      "day": 739903,
+      "day": 739902,
       "problem_slug": "leetcode:construct-the-rectangle",
       "problem_title": "Leetcode:Construct The Rectangle",
       "difficulty": "EASY",
@@ -710,7 +745,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739905,
+      "day": 739904,
       "problem_slug": "leetcode:max-consecutive-ones-iii",
       "problem_title": "Leetcode:Max Consecutive Ones Iii",
       "difficulty": "MEDIUM",
@@ -732,7 +767,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 891132706,
-      "day": 739906,
+      "day": 739905,
       "problem_slug": "leetcode:nim-game",
       "problem_title": "Leetcode:Nim Game",
       "difficulty": "EASY",
@@ -776,7 +811,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739909,
+      "day": 739908,
       "problem_slug": "leetcode:consecutive-characters",
       "problem_title": "Leetcode:Consecutive Characters",
       "difficulty": "EASY",
@@ -864,7 +899,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739901,
+      "day": 739900,
       "problem_slug": "leetcode:sort-colors",
       "problem_title": "Sort Colors",
       "difficulty": "MEDIUM",
@@ -985,7 +1020,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 891132706,
-      "day": 739914,
+      "day": 739913,
       "problem_slug": "leetcode:solving-questions-with-brainpower",
       "problem_title": "Solving Questions With Brainpower",
       "difficulty": "MEDIUM",
@@ -996,7 +1031,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739914,
+      "day": 739913,
       "problem_slug": "leetcode:get-equal-substrings-within-budget",
       "problem_title": "Get Equal Substrings Within Budget",
       "difficulty": "MEDIUM",
@@ -1029,7 +1064,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739915,
+      "day": 739914,
       "problem_slug": "leetcode:range-sum-query-immutable",
       "problem_title": "Range Sum Query - Immutable",
       "difficulty": "EASY",
@@ -1062,7 +1097,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739916,
+      "day": 739915,
       "problem_slug": "leetcode:subarray-sum-equals-k",
       "problem_title": "Subarray Sum Equals K",
       "difficulty": "MEDIUM",
@@ -1172,7 +1207,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 891132706,
-      "day": 739920,
+      "day": 739919,
       "problem_slug": "leetcode:minimum-deletions-to-make-array-sharp",
       "problem_title": "Minimum Deletions to Make Array Sharp",
       "difficulty": "EASY",
@@ -1183,7 +1218,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 891132706,
-      "day": 739920,
+      "day": 739919,
       "problem_slug": "leetcode:last-visited-cell-in-a-directional-grid",
       "problem_title": "Last Visited Cell in a Directional Grid",
       "difficulty": "MEDIUM",
@@ -1216,7 +1251,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739921,
+      "day": 739920,
       "problem_slug": "leetcode:largest-rectangle-in-histogram",
       "problem_title": "Largest Rectangle in Histogram",
       "difficulty": "HARD",
@@ -1282,7 +1317,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739923,
+      "day": 739922,
       "problem_slug": "leetcode:remove-element",
       "problem_title": "Remove Element",
       "difficulty": "EASY",
@@ -1326,7 +1361,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739924,
+      "day": 739923,
       "problem_slug": "leetcode:search-insert-position",
       "problem_title": "Search Insert Position",
       "difficulty": "EASY",
@@ -1348,7 +1383,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 1023678868,
-      "day": 739925,
+      "day": 739924,
       "problem_slug": "leetcode:contains-duplicate",
       "problem_title": "Contains Duplicate",
       "difficulty": "EASY",
@@ -1359,7 +1394,7 @@
     {
       "chat_id": -5554078333,
       "user_id": 891132706,
-      "day": 739925,
+      "day": 739924,
       "problem_slug": "leetcode:daily-temperatures",
       "problem_title": "Daily Temperatures",
       "difficulty": "MEDIUM",
