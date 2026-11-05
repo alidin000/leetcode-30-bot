@@ -31,7 +31,7 @@ GITHUB_BACKUP_REPO = os.environ.get("GITHUB_BACKUP_REPO", "alidin000/leetcode-30
 GITHUB_BACKUP_BRANCH = os.environ.get("GITHUB_BACKUP_BRANCH", "data-backup")
 GITHUB_BACKUP_PATH = os.environ.get("GITHUB_BACKUP_PATH", "data/backup.json")
 
-START_DATE = datetime.fromisoformat("2026-10-06").date()
+START_DATE = datetime.fromisoformat("2026-11-01").date()
 
 POINTS_BY_DIFFICULTY = {
     "EASY": 1,
@@ -262,6 +262,22 @@ def backup_to_github():
         logging.exception("Remote GitHub backup is invalid; refusing to overwrite it.")
         return False
 
+    for collection in ("submissions", "competition_submissions"):
+        for row in remote_backup.get(collection, []):
+            try:
+                submitted_at = datetime.fromisoformat(row["submitted_at"])
+                row["day"] = submitted_at.astimezone(TIMEZONE).date().toordinal()
+            except (KeyError, TypeError, ValueError):
+                continue
+
+    for row in remote_backup.get("presubmissions", []):
+        if row.get("used_at"):
+            try:
+                used_at = datetime.fromisoformat(row["used_at"])
+                row["used_day"] = used_at.astimezone(TIMEZONE).date().toordinal()
+            except (TypeError, ValueError):
+                continue
+
     def merge_records(existing_rows, current_rows, key_fields):
         merged = {}
         for row in existing_rows or []:
@@ -464,14 +480,23 @@ def register_user(update):
     conn.close()
 
 
+def day_date(day):
+    return datetime.fromordinal(int(day)).date()
+
+
+def day_label(day):
+    current = day_date(day)
+    return f"Day {current.day} ({current.strftime('%d %b')})"
+
+
 def challenge(day):
     shuffled = random.Random(START_DATE.toordinal()).sample(CHALLENGES, len(CHALLENGES))
-    return shuffled[(day - 1) % len(shuffled)]
+    day_number = day_date(day).day
+    return shuffled[(day_number - 1) % len(shuffled)]
 
 
 def current_day():
-    today = datetime.now(timezone.utc).date()
-    return min(30, max(1, (today - START_DATE).days + 1))
+    return datetime.now(TIMEZONE).date().toordinal()
 
 
 def normalize_submission_days():
@@ -484,10 +509,9 @@ def normalize_submission_days():
         ).fetchall()
         for submission_id, submitted_at, current_day in competition_rows:
             try:
-                submitted_date = datetime.fromisoformat(submitted_at).astimezone(timezone.utc).date()
+                calculated_day = datetime.fromisoformat(submitted_at).astimezone(TIMEZONE).date().toordinal()
             except (TypeError, ValueError):
                 continue
-            calculated_day = min(30, max(1, (submitted_date - START_DATE).days + 1))
             if current_day != calculated_day:
                 conn.execute(
                     "UPDATE competition_submissions SET day=? WHERE id=?",
@@ -502,8 +526,7 @@ def normalize_submission_days():
         keep_by_day = {}
         for submission_id, chat_id, user_id, submitted_at, current_day in legacy_rows:
             try:
-                submitted_date = datetime.fromisoformat(submitted_at).astimezone(timezone.utc).date()
-                calculated_day = min(30, max(1, (submitted_date - START_DATE).days + 1))
+                calculated_day = datetime.fromisoformat(submitted_at).astimezone(TIMEZONE).date().toordinal()
             except (TypeError, ValueError):
                 calculated_day = current_day
             key = (chat_id, user_id, calculated_day)
@@ -533,12 +556,13 @@ def normalize_submission_days():
     finally:
         conn.close()
     if changed:
-        logging.info("Normalized submission days and resolved %s row changes/duplicates.", changed)
+        logging.info("Normalized calendar-date submission keys and resolved %s row changes/duplicates.", changed)
 
 def challenge_message(day):
     name, url = challenge(day)
+    current = day_date(day)
     return (
-        f"🧠 Day {day}/30\n\n{name}\n{url}\n\n"
+        f"🧠 {day_label(day)} · {current.strftime('%B %Y')}\n\n{name}\n{url}\n\n"
         "⚔️ Competition mode: every unique LeetCode problem you submit counts.\n"
         "Easy = 1 point · Medium = 2 points · Hard = 4 points.\n"
         "Duplicate problems do not score again."
@@ -868,12 +892,9 @@ async def track(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     chat_id = update.effective_chat.id
     today = current_day()
-    first_day = max(1, today - requested_days + 1)
-    actual_days = today - first_day + 1
-    dates = {
-        day: (START_DATE.fromordinal(START_DATE.toordinal() + day - 1))
-        for day in range(first_day, today + 1)
-    }
+    first_day = today - requested_days + 1
+    actual_days = requested_days
+    dates = {day: day_date(day) for day in range(first_day, today + 1)}
 
     conn = db()
     users = conn.execute(
@@ -894,8 +915,7 @@ async def track(update: Update, context: ContextTypes.DEFAULT_TYPE):
     seen_submission_keys = set()
     for user_id, url, submitted_at, stored_day in submitted_rows:
         try:
-            submitted_date = datetime.fromisoformat(submitted_at).astimezone(timezone.utc).date()
-            day = min(30, max(1, (submitted_date - START_DATE).days + 1))
+            day = datetime.fromisoformat(submitted_at).astimezone(TIMEZONE).date().toordinal()
         except (TypeError, ValueError):
             day = stored_day
         if not first_day <= day <= today:
@@ -910,8 +930,8 @@ async def track(update: Update, context: ContextTypes.DEFAULT_TYPE):
     header_start = dates[first_day].strftime("%d %b")
     header_end = dates[today].strftime("%d %b")
     lines = [
-        f"📊 Submission tracker — last {actual_days} challenge days",
-        f"D{first_day}–D{today} · {header_start}–{header_end}",
+        f"📊 Submission tracker — last {actual_days} calendar days",
+        f"{header_start}–{header_end}",
         "✅ submitted · ❌ missed · ⏳ today still in progress",
         "",
     ]
@@ -925,13 +945,13 @@ async def track(update: Update, context: ContextTypes.DEFAULT_TYPE):
             done = [day for day in completed_days if day in user_days]
             missed = [day for day in completed_days if day not in user_days]
             today_status = "✅" if today in user_days else "⏳"
-            done_label = ", ".join(f"D{day}" for day in done) or "none"
-            missed_label = ", ".join(f"D{day}" for day in missed) or "none"
+            done_label = ", ".join(dates[day].strftime("%d %b") for day in done) or "none"
+            missed_label = ", ".join(dates[day].strftime("%d %b") for day in missed) or "none"
             lines.append(
                 f"{display}\n"
                 f"  ✅ Submitted: {done_label}\n"
                 f"  ❌ Missed: {missed_label}\n"
-                f"  {today_status} Today (D{today}): "
+                f"  {today_status} Today ({dates[today].strftime('%d %b')}): "
                 f"{'submitted' if today in user_days else 'pending'}"
             )
 
@@ -961,7 +981,7 @@ async def progress(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "SELECT user_id, first_name, username FROM users WHERE chat_id=? ORDER BY first_name",
         (chat_id,),
     ).fetchall()
-    message = [f"🏆 Day {day}/30", ""]
+    message = [f"🏆 {day_label(day)} · {day_date(day).strftime('%B %Y')}", ""]
     for user_id, first_name, username in rows:
         today_count, today_points = conn.execute(
             """
@@ -1040,7 +1060,7 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     overall_rows = leaderboard_rows(chat_id)
 
     message = [
-        f"🏆 Leaderboard — Day {day}/30",
+        f"🏆 Leaderboard — {day_label(day)} · {day_date(day).strftime('%B %Y')}",
         "",
         *leaderboard_section("📅 TODAY", daily_rows),
         "",
@@ -1157,7 +1177,7 @@ async def finish_submission(update, problem_title, difficulty, points, pending):
     if not result["counted"]:
         existing = result["existing"]
         text = (
-            f"⚠️ Duplicate: {problem_title} was already counted on Day {existing[0]}. "
+            f"⚠️ Duplicate: {problem_title} was already counted on {day_label(existing[0])}. "
             f"It is worth {existing[3]} point(s), so this submission adds 0 points."
         )
     else:
@@ -1253,7 +1273,7 @@ async def record_submission(update: Update, url: str, context: ContextTypes.DEFA
         conn.commit()
         conn.close()
         await update.effective_message.reply_text(
-            f"⚠️ Duplicate: {metadata['title']} was already counted on Day {existing[0]}. "
+            f"⚠️ Duplicate: {metadata['title']} was already counted on {day_label(existing[0])}. "
             f"It adds 0 points, but today's participation is recorded."
         )
         return
@@ -1486,7 +1506,7 @@ async def usepresubmit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.close()
     backup_ok = await asyncio.to_thread(backup_to_github)
     await update.effective_message.reply_text(
-        f"🧳 Activating pre-submission for Day {day}: {slug.replace(':', ' · ').replace('-', ' ')}"
+        f"🧳 Activating pre-submission for {day_label(day)}: {slug.replace(':', ' · ').replace('-', ' ')}"
     )
     await record_submission(update, url, context)
     if not backup_ok:
@@ -1590,7 +1610,7 @@ async def test_tag(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not incomplete:
         await update.effective_message.reply_text(
-            f"🧪 Tag test passed: everyone registered in this chat has submitted Day {day}."
+            f"🧪 Tag test passed: everyone registered in this chat has submitted {day_label(day)}."
         )
         return
 
@@ -1599,7 +1619,7 @@ async def test_tag(update: Update, context: ContextTypes.DEFAULT_TYPE):
         for user_id, first_name, username in incomplete
     )
     await update.effective_message.reply_text(
-        f"🧪 <b>Tag test</b> — Day {day}\n\n"
+        f"🧪 <b>Tag test</b> — {day_label(day)}\n\n"
         f"These participants would be tagged by the reminder:\n{mentions}",
         parse_mode="HTML",
     )
