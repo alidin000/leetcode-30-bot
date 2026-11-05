@@ -278,7 +278,7 @@ def backup_to_github():
         for row in remote_backup.get(collection, []):
             try:
                 submitted_at = datetime.fromisoformat(row["submitted_at"])
-                row["day"] = submitted_at.astimezone(TIMEZONE).date().toordinal()
+                row["day"] = submitted_at.astimezone(timezone.utc).date().toordinal()
             except (KeyError, TypeError, ValueError):
                 continue
 
@@ -286,7 +286,7 @@ def backup_to_github():
         if row.get("used_at"):
             try:
                 used_at = datetime.fromisoformat(row["used_at"])
-                row["used_day"] = used_at.astimezone(TIMEZONE).date().toordinal()
+                row["used_day"] = used_at.astimezone(timezone.utc).date().toordinal()
             except (TypeError, ValueError):
                 continue
 
@@ -520,7 +520,7 @@ def challenge(day):
 
 
 def current_day():
-    return datetime.now(TIMEZONE).date().toordinal()
+    return datetime.now(timezone.utc).date().toordinal()
 
 
 def normalize_submission_days():
@@ -533,7 +533,7 @@ def normalize_submission_days():
         ).fetchall()
         for submission_id, submitted_at, current_day in competition_rows:
             try:
-                calculated_day = datetime.fromisoformat(submitted_at).astimezone(TIMEZONE).date().toordinal()
+                calculated_day = datetime.fromisoformat(submitted_at).astimezone(timezone.utc).date().toordinal()
             except (TypeError, ValueError):
                 continue
             if current_day != calculated_day:
@@ -550,7 +550,7 @@ def normalize_submission_days():
         keep_by_day = {}
         for submission_id, chat_id, user_id, submitted_at, current_day in legacy_rows:
             try:
-                calculated_day = datetime.fromisoformat(submitted_at).astimezone(TIMEZONE).date().toordinal()
+                calculated_day = datetime.fromisoformat(submitted_at).astimezone(timezone.utc).date().toordinal()
             except (TypeError, ValueError):
                 calculated_day = current_day
             key = (chat_id, user_id, calculated_day)
@@ -939,7 +939,7 @@ async def track(update: Update, context: ContextTypes.DEFAULT_TYPE):
     seen_submission_keys = set()
     for user_id, url, submitted_at, stored_day in submitted_rows:
         try:
-            day = datetime.fromisoformat(submitted_at).astimezone(TIMEZONE).date().toordinal()
+            day = datetime.fromisoformat(submitted_at).astimezone(timezone.utc).date().toordinal()
         except (TypeError, ValueError):
             day = stored_day
         if not first_day <= day <= today:
@@ -1569,7 +1569,7 @@ async def submission(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def previous_month_key():
-    today = datetime.now(TIMEZONE).date()
+    today = datetime.now(timezone.utc).date()
     first = today.replace(day=1)
     previous = first.fromordinal(first.toordinal() - 1)
     return previous.strftime("%Y-%m")
