@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-11-05T23:43:37.688387+00:00",
+  "updated_at": "2026-11-05T23:49:56.337534+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -500,6 +500,13 @@
       "day": 739925,
       "url": "https://leetcode.com/problems/minimum-queen-moves-to-reach-target/submissions/2190391368",
       "submitted_at": "2026-11-05T23:41:24.874284+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 739925,
+      "url": "https://leetcode.com/problems/move-zeroes/submissions/2190394429/",
+      "submitted_at": "2026-11-05T23:49:55.742499+00:00"
     }
   ],
   "competition_submissions": [
@@ -1437,6 +1444,17 @@
       "points": 1,
       "url": "https://leetcode.com/problems/minimum-queen-moves-to-reach-target/submissions/2190391368",
       "submitted_at": "2026-11-05T23:41:24.874284+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 1023678868,
+      "day": 739925,
+      "problem_slug": "leetcode:move-zeroes",
+      "problem_title": "Move Zeroes",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://leetcode.com/problems/move-zeroes/submissions/2190394429/",
+      "submitted_at": "2026-11-05T23:49:55.742499+00:00"
     }
   ],
   "presubmissions": [
