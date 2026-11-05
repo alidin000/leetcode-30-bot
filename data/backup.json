@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-11-05T21:58:15.093343+00:00",
+  "updated_at": "2026-11-05T21:58:17.833928+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -486,6 +486,13 @@
       "day": 739920,
       "url": "https://leetcode.com/problems/maximum-product-pair-with-target-sum/submissions/2186048109",
       "submitted_at": "2026-10-31T08:36:48.402376+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 739925,
+      "url": "https://neetcode.io/problems/balanced-binary-tree/question",
+      "submitted_at": "2026-11-05T21:58:17.316448+00:00"
     }
   ],
   "competition_submissions": [
@@ -1401,6 +1408,17 @@
       "points": 2,
       "url": "https://leetcode.com/problems/daily-temperatures/submissions/2189695295",
       "submitted_at": "2026-11-04T23:27:00.068688+00:00"
+    },
+    {
+      "chat_id": -5554078333,
+      "user_id": 6327136808,
+      "day": 739925,
+      "problem_slug": "neetcode:balanced-binary-tree",
+      "problem_title": "Balanced Binary Tree",
+      "difficulty": "EASY",
+      "points": 1,
+      "url": "https://neetcode.io/problems/balanced-binary-tree/question",
+      "submitted_at": "2026-11-05T21:58:17.316448+00:00"
     }
   ],
   "presubmissions": [
