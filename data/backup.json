@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-11-05T21:56:20.683575+00:00",
+  "updated_at": "2026-11-05T21:58:15.093343+00:00",
   "users": [
     {
       "chat_id": -5554078333,
@@ -1431,8 +1431,8 @@
       "url": "https://neetcode.io/problems/balanced-binary-tree/question",
       "problem_slug": "neetcode:balanced-binary-tree",
       "created_at": "2026-11-01T17:43:28.573413+00:00",
-      "used_at": null,
-      "used_day": null
+      "used_at": "2026-11-05T21:58:14.634183+00:00",
+      "used_day": 739925
     }
   ],
   "monthly_reports": []
