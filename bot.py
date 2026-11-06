@@ -30,6 +30,7 @@ GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 GITHUB_BACKUP_REPO = os.environ.get("GITHUB_BACKUP_REPO", "alidin000/leetcode-30-bot")
 GITHUB_BACKUP_BRANCH = os.environ.get("GITHUB_BACKUP_BRANCH", "data-backup")
 GITHUB_BACKUP_PATH = os.environ.get("GITHUB_BACKUP_PATH", "data/backup.json")
+AUTO_SEND_PAUSED_UNTIL = datetime.fromisoformat("2026-11-13T14:40:00+00:00")
 
 START_DATE = datetime.fromisoformat("2026-11-01").date()
 
@@ -1606,6 +1607,9 @@ def monthly_celebration_text(chat_id, month):
 
 
 async def monthly_celebration(context: ContextTypes.DEFAULT_TYPE):
+    if datetime.now(timezone.utc) < AUTO_SEND_PAUSED_UNTIL:
+        logging.info("Skipping monthly celebration during the scheduled break.")
+        return
     if not await asyncio.to_thread(restore_with_retries, 1):
         logging.warning("Skipping monthly results because GitHub restore failed.")
         return
@@ -1664,6 +1668,9 @@ def mention_user(user_id, first_name, username):
 
 
 async def daily_reminder(context: ContextTypes.DEFAULT_TYPE):
+    if datetime.now(timezone.utc) < AUTO_SEND_PAUSED_UNTIL:
+        logging.info("Skipping daily reminder during the scheduled break.")
+        return
     conn = db()
     chats = [row[0] for row in conn.execute("SELECT DISTINCT chat_id FROM users")]
     conn.close()
