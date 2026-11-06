@@ -19,6 +19,7 @@ from urllib.error import HTTPError, URLError
 TIMEZONE = timezone.utc
 START_DATE = datetime.fromisoformat("2026-11-01").date()
 AI_FILE = "ai/daily_content.json"
+AUTO_SEND_PAUSED_UNTIL = datetime.fromisoformat("2026-11-13T14:40:00+00:00")
 
 POINTS_BY_DIFFICULTY = {
     "EASY": 1,
@@ -407,6 +408,10 @@ def penalty_text(day, users, backup, chat_id):
 
 
 def main():
+    if datetime.now(timezone.utc) < AUTO_SEND_PAUSED_UNTIL:
+        print(f"Scheduled Telegram messages are paused until {AUTO_SEND_PAUSED_UNTIL.isoformat()}.")
+        return
+
     backup = load_backup()
     users = backup.get("users", [])
     entries = build_competition_entries(backup)
