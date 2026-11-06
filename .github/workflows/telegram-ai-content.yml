@@ -45,8 +45,13 @@ jobs:
           import subprocess
           import urllib.parse
           import urllib.request
-          from datetime import datetime
+          from datetime import datetime, timezone
           from zoneinfo import ZoneInfo
+
+          pause_until = datetime.fromisoformat("2026-11-13T14:40:00+00:00")
+          if datetime.now(timezone.utc) < pause_until:
+              print(f"Automatic Telegram messages are paused until {pause_until.isoformat()}.")
+              raise SystemExit(0)
 
           token = os.environ.get("TELEGRAM_BOT_TOKEN")
           if not token:
