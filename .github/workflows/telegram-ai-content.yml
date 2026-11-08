@@ -48,7 +48,7 @@ jobs:
           from datetime import datetime, timezone
           from zoneinfo import ZoneInfo
 
-          pause_until = datetime.fromisoformat("2026-11-13T14:40:00+00:00")
+          pause_until = datetime.fromisoformat("2026-11-12T23:00:00+00:00")
           if datetime.now(timezone.utc) < pause_until:
               print(f"Automatic Telegram messages are paused until {pause_until.isoformat()}.")
               raise SystemExit(0)
