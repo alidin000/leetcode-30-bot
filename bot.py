@@ -30,7 +30,7 @@ GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 GITHUB_BACKUP_REPO = os.environ.get("GITHUB_BACKUP_REPO", "alidin000/leetcode-30-bot")
 GITHUB_BACKUP_BRANCH = os.environ.get("GITHUB_BACKUP_BRANCH", "data-backup")
 GITHUB_BACKUP_PATH = os.environ.get("GITHUB_BACKUP_PATH", "data/backup.json")
-AUTO_SEND_PAUSED_UNTIL = datetime.fromisoformat("2026-11-13T14:40:00+00:00")
+AUTO_SEND_PAUSED_UNTIL = datetime.fromisoformat("2026-11-12T23:00:00+00:00")
 
 START_DATE = datetime.fromisoformat("2026-11-01").date()
 
