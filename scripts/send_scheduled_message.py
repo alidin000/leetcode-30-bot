@@ -19,7 +19,7 @@ from urllib.error import HTTPError, URLError
 TIMEZONE = timezone.utc
 START_DATE = datetime.fromisoformat("2026-11-01").date()
 AI_FILE = "ai/daily_content.json"
-AUTO_SEND_PAUSED_UNTIL = datetime.fromisoformat("2026-11-13T14:40:00+00:00")
+AUTO_SEND_PAUSED_UNTIL = datetime.fromisoformat("2026-11-12T23:00:00+00:00")
 
 POINTS_BY_DIFFICULTY = {
     "EASY": 1,
